@@ -1,6 +1,6 @@
 # Discover Analytics Front
 
-- Identidad editorial (tokens en `src/app/tokens.css`). Sin verdes FUA, sin Nexus Glass, sin look Pary.
-- Textos de interfaz en español. Código en inglés.
-- Puerto 3001 para no chocar con Discover (3000).
-- API: `NEXT_PUBLIC_API_URL` (repo hermano Discover Analytics Back).
+- **Identidad DISCOVER** light-first: blanco + negro + `#F3F188`, Blogh + Glora. Ver [`docs/design-system.md`](docs/design-system.md).
+- Tokens: [`src/app/tokens.css`](src/app/tokens.css). Charts: [`src/brand/chart-tokens.ts`](src/brand/chart-tokens.ts).
+- Textos UI en español. Código en inglés.
+- Puerto **3001**. API: `NEXT_PUBLIC_API_URL`.

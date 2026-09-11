@@ -1,13 +1,103 @@
+/* Discover Analytics — light-first brand tokens
+   White canvas, black ink, yellow DISCOVER (#F3F188) accents. Low saturation. */
+
+@font-face {
+  font-family: "Blogh";
+  src: url("/fonts/Blogh.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Glora";
+  src: url("/fonts/ZTGloraPro-ExtraLight.otf") format("opentype");
+  font-weight: 200;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Glora";
+  src: url("/fonts/ZTGloraPro-Light.otf") format("opentype");
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Glora";
+  src: url("/fonts/ZTGloraPro-Regular.otf") format("opentype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
-  --color-bg: #f4f1ea;
-  --color-surface: #fffdf8;
-  --color-ink: #1c2430;
-  --color-petrol: #1f3a4d;
-  --color-muted: #5c6670;
-  --color-line: #d4cfc4;
-  --color-accent: #c9842a;
-  --font-display: "Iowan Old Style", "Palatino Linotype", Palatino, serif;
-  --font-sans: "Segoe UI", system-ui, sans-serif;
+  /* Brand base */
+  --discover-obsidian: #000000;
+  --discover-yellow: #f3f188;
+
+  /* Chart accents — soft / desaturated (never louder than yellow) */
+  --discover-ultraviolet: #a894c9;
+  --discover-tomato: #c45a45;
+  --discover-cornflower: #7a9bc4;
+  --discover-plum: #c9a8c8;
+
+  /* UI light */
+  --discover-paper: #ffffff;
+  --discover-mist: #f7f7f4;
+  --discover-fog: #efeee8;
+  --discover-line: #e4e2da;
+  --discover-line-strong: #d4d2c8;
+  --discover-storm: #6b6d78;
+  --discover-ink: #121212;
+  --discover-ink-soft: #3a3a3f;
+
+  /* Legacy aliases (components still reference these names) */
+  --discover-white: #ffffff;
+  --discover-white1: #3a3a3f;
+  --discover-graphite: #f7f7f4;
+  --discover-midnight: #ffffff;
+  --discover-charcoal: #e4e2da;
+  --discover-purple-slate: #d4d2c8;
+
+  /* Semantic */
+  --color-bg: var(--discover-mist);
+  --color-bg-elevated: var(--discover-paper);
+  --color-surface: var(--discover-paper);
+  --color-surface-alt: var(--discover-fog);
+  --color-ink: var(--discover-ink);
+  --color-muted: var(--discover-storm);
+  --color-muted-bright: var(--discover-ink-soft);
+  --color-line: var(--discover-line);
+  --color-line-strong: var(--discover-line-strong);
+  --color-brand: var(--discover-yellow);
+  --color-cta: var(--discover-yellow);
+  --color-cta-ink: var(--discover-obsidian);
+  --color-up: #8a8800;
+  --color-down: var(--discover-tomato);
+  --color-focus: var(--discover-obsidian);
+
+  /* Charts on light */
+  --chart-1: #c9c65a;
+  --chart-2: #a894c9;
+  --chart-3: #7a9bc4;
+  --chart-4: #c9a8c8;
+  --chart-alert: #c45a45;
+  --chart-grid: rgba(18, 18, 18, 0.08);
+
+  --font-display: "Blogh", "Arial Narrow", "Franklin Gothic Condensed", sans-serif;
+  --font-ui: "Glora", Candara, Calibri, "Trebuchet MS", sans-serif;
+
+  --radius-pill: 999px;
+  --radius-card: 1.25rem;
+  --glow-yellow: 0 8px 28px rgba(243, 241, 136, 0.45);
+  --glow-violet: 0 10px 32px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 8px 32px rgba(0, 0, 0, 0.07);
+  --glass-fill: rgba(255, 255, 255, 0.62);
+  --glass-border: rgba(255, 255, 255, 0.75);
+  --glass-blur: blur(14px) saturate(140%);
 }
 
 * {
@@ -20,9 +110,297 @@ body {
   min-height: 100%;
   background: var(--color-bg);
   color: var(--color-ink);
-  font-family: var(--font-sans);
+  font-family: var(--font-ui);
+  font-weight: 300;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
-  color: var(--color-petrol);
+  color: var(--discover-ink);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+}
+
+a:hover {
+  border-bottom-color: var(--discover-yellow);
+  text-decoration: none;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 3px;
+}
+
+.font-blogh {
+  font-family: var(--font-display);
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.font-glora-xl {
+  font-family: var(--font-ui);
+  font-weight: 200;
+}
+
+.font-glora-l {
+  font-family: var(--font-ui);
+  font-weight: 300;
+}
+
+.font-glora {
+  font-family: var(--font-ui);
+  font-weight: 400;
+}
+
+.btn-discover {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.35rem;
+  border: 1px solid var(--discover-obsidian);
+  border-radius: var(--radius-pill);
+  background: var(--color-cta);
+  color: var(--color-cta-ink);
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 0.95rem;
+  cursor: pointer;
+  box-shadow: var(--glow-yellow);
+}
+
+.btn-discover:hover {
+  filter: brightness(0.98);
+  text-decoration: none;
+}
+
+.scope-picker {
+  margin-top: 1.25rem;
+}
+
+.scope-picker__label {
+  display: block;
+  margin-bottom: 0.65rem;
+  color: var(--discover-storm);
+  font-family: var(--font-ui);
+  font-weight: 200;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.scope-picker__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.scope-chip {
+  appearance: none;
+  border: 1px solid var(--discover-obsidian);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.55);
+  color: var(--discover-obsidian);
+  font-family: var(--font-ui);
+  font-weight: 400;
+  font-size: 0.8rem;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  transition: background 0.15s ease, box-shadow 0.15s ease;
+}
+
+.scope-chip:hover {
+  background: rgba(243, 241, 136, 0.45);
+}
+
+.scope-chip--active {
+  background: var(--discover-yellow);
+}
+
+.scope-chip:focus-visible {
+  outline: 2px solid var(--discover-obsidian);
+  outline-offset: 2px;
+}
+
+/* Mouse click on chips: no focus rectangle (keyboard still gets :focus-visible). */
+.scope-chip:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Recharts / SVG take focus on click → browser draws an orange/yellow box. Kill it. */
+.chart-crossfilter,
+.chart-crossfilter *,
+.chart-crossfilter:focus,
+.chart-crossfilter *:focus,
+.recharts-wrapper,
+.recharts-wrapper:focus,
+.recharts-surface:focus,
+.recharts-sector:focus,
+.recharts-layer:focus,
+.recharts-legend-item:focus,
+.recharts-pie-sector:focus {
+  outline: none !important;
+}
+
+.surface-card {
+  background: var(--glass-fill);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  min-width: 0;
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .surface-card {
+    background: var(--discover-paper);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .surface-card {
+    background: var(--discover-paper);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    border-color: var(--discover-line);
+  }
+
+  .shell-header {
+    background: var(--discover-paper) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+
+.shell-header {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(12px) saturate(140%);
+  -webkit-backdrop-filter: blur(12px) saturate(140%);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.7);
+}
+
+.hero-glow {
+  /* legacy alias — prefer .app-backdrop */
+  position: relative;
+  isolation: isolate;
+}
+
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 75% 45% at 12% -8%, rgba(243, 241, 136, 0.65), transparent 58%),
+    radial-gradient(ellipse 55% 40% at 92% 5%, rgba(243, 241, 136, 0.35), transparent 55%),
+    radial-gradient(ellipse 50% 35% at 70% 85%, rgba(201, 168, 200, 0.22), transparent 50%),
+    radial-gradient(ellipse 40% 30% at 5% 70%, rgba(0, 0, 0, 0.05), transparent 55%),
+    radial-gradient(ellipse 45% 28% at 48% 40%, rgba(168, 148, 201, 0.12), transparent 60%),
+    var(--discover-mist);
+}
+
+.bg-orbs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.bg-orbs__blob {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.bg-orbs__blob--yellow {
+  width: min(52vw, 420px);
+  height: min(52vw, 420px);
+  top: 8%;
+  right: -6%;
+  background: #f3f188;
+  opacity: 0.42;
+}
+
+.bg-orbs__blob--ink {
+  width: min(38vw, 280px);
+  height: min(38vw, 280px);
+  bottom: 12%;
+  left: -4%;
+  background: #121212;
+  opacity: 0.06;
+}
+
+.bg-orbs__blob--plum {
+  width: min(44vw, 340px);
+  height: min(34vw, 260px);
+  top: 42%;
+  left: 28%;
+  background: #c9a8c8;
+  opacity: 0.18;
+  border-radius: 45% 55% 60% 40%;
+}
+
+.bg-orbs__blob--fog {
+  width: min(30vw, 220px);
+  height: min(30vw, 220px);
+  bottom: 28%;
+  right: 18%;
+  background: #efeee8;
+  opacity: 0.9;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.shell-content {
+  position: relative;
+  z-index: 1;
+}
+
+.pattern-stamp {
+  background-image: repeating-linear-gradient(
+    -18deg,
+    transparent,
+    transparent 18px,
+    rgba(0, 0, 0, 0.03) 18px,
+    rgba(0, 0, 0, 0.03) 19px
+  );
+}
+
+.kpi-number {
+  /* Blogh has no digit glyphs — use Glora for readable numbers */
+  font-family: var(--font-ui);
+  font-weight: 400;
+  letter-spacing: 0.02em;
+  color: var(--discover-obsidian);
+  line-height: 1.15;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.kpi-label {
+  font-family: var(--font-ui);
+  font-weight: 200;
+  color: var(--color-muted);
+  letter-spacing: 0.04em;
+}
+
+.delta-up {
+  color: var(--color-up);
+  font-weight: 400;
+}
+
+.delta-down {
+  color: var(--color-down);
+  font-weight: 400;
+}
+
+.divider {
+  border: none;
+  border-top: 1px solid var(--color-line);
+  margin: 0;
 }

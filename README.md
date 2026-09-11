@@ -1,6 +1,6 @@
 # Discover Analytics Front
 
-Interfaz de estudios de consultoría. Remote: https://github.com/Miguelospina44/Discover-Analitics-Front.git
+UI light-first de estudios. Marca DISCOVER (Friend / “4 Friends, By Friends.”) — blanco, negro, amarillo.
 
 ```bash
 npm install
@@ -8,4 +8,6 @@ copy .env.example .env.local
 npm run dev
 ```
 
-Abre `http://localhost:3001`. El hub responde las seis preguntas de estado del estudio; los dashboards se cargarán contra `/api/v1` del back.
+http://localhost:3001 — hub + empty state. Login look en `/login` (cable API en siguiente slice).
+
+Design system: [docs/design-system.md](docs/design-system.md).
