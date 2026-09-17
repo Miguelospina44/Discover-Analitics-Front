@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { DiscoverLogo } from "./DiscoverLogo";
 import { useAuth } from "@/lib/auth";
 
@@ -32,9 +33,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             zIndex: 20,
           }}
         >
-          <a href="/" style={{ textDecoration: "none", borderBottom: "none" }}>
+          <Link href="/" style={{ textDecoration: "none", borderBottom: "none" }}>
             <DiscoverLogo variant="secondary" />
-          </a>
+          </Link>
           <nav
             className="font-glora"
             style={{
@@ -51,9 +52,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 {me.account_name ?? "cuenta"} · {me.role}
               </span>
             ) : null}
-            <a href="/" style={{ color: "var(--discover-ink)" }}>
+            <Link href="/" style={{ color: "var(--discover-ink)" }}>
               Estudios
-            </a>
+            </Link>
             {ready && token ? (
               <button
                 type="button"
@@ -75,9 +76,9 @@ export function AppShell({ children }: { children: ReactNode }) {
                 Salir
               </button>
             ) : (
-              <a href="/login" style={{ color: "var(--discover-storm)" }}>
+              <Link href="/login" style={{ color: "var(--discover-storm)" }}>
                 Entrar
-              </a>
+              </Link>
             )}
           </nav>
         </header>
