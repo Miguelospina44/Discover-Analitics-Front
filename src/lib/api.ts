@@ -12,7 +12,10 @@ import {
 } from "./types";
 
 export function apiUrl(path = ""): string {
-  const base = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8002").replace(/\/$/, "");
+  // Default to same-origin: an empty base yields a relative path that the Next
+  // rewrite proxies to the backend (see next.config.ts). Set NEXT_PUBLIC_API_URL
+  // only to point the browser at an absolute backend origin.
+  const base = (process.env.NEXT_PUBLIC_API_URL ?? "").replace(/\/$/, "");
   return `${base}${path}`;
 }
 
