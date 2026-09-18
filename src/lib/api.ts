@@ -2,6 +2,8 @@ import {
   ApiError,
   type AccountOut,
   type AttendanceMeasure,
+  type EventOut,
+  type EventPerformanceResponse,
   type GenderMeasure,
   type GremialBenchmarks,
   type MeResponse,
@@ -124,6 +126,45 @@ export async function fetchAttendanceByGender(
   });
   if (!res.ok) await parseError(res);
   return res.json() as Promise<GenderMeasure>;
+}
+
+export type EventQuery = {
+  accountId?: string | null;
+  venueId?: string | null;
+  periodStart?: string | null;
+  periodEnd?: string | null;
+};
+
+export async function fetchEvents(
+  token: string,
+  query: EventQuery = {},
+): Promise<EventOut[]> {
+  const qs = new URLSearchParams();
+  if (query.accountId) qs.set("account_id", query.accountId);
+  if (query.venueId) qs.set("venue_id", query.venueId);
+  if (query.periodStart) qs.set("period_start", query.periodStart);
+  if (query.periodEnd) qs.set("period_end", query.periodEnd);
+  const suffix = qs.toString() ? `?${qs}` : "";
+  const res = await fetch(apiUrl(`/api/v1/events${suffix}`), {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) await parseError(res);
+  return res.json() as Promise<EventOut[]>;
+}
+
+export async function fetchEvent(
+  token: string,
+  eventId: string,
+  accountId?: string | null,
+): Promise<EventPerformanceResponse> {
+  const qs = new URLSearchParams();
+  if (accountId) qs.set("account_id", accountId);
+  const suffix = qs.toString() ? `?${qs}` : "";
+  const res = await fetch(apiUrl(`/api/v1/events/${eventId}${suffix}`), {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) await parseError(res);
+  return res.json() as Promise<EventPerformanceResponse>;
 }
 
 export async function fetchGremialBenchmarks(

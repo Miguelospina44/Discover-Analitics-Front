@@ -64,6 +64,40 @@ export type GenderPoint = {
 
 export type GenderMeasure = MeasureEnvelope<GenderPoint>;
 
+export type EventOut = {
+  event_id: string;
+  account_id: string;
+  venue_id: string;
+  name: string;
+  event_type: string;
+  event_date: string;
+  created_at: string;
+};
+
+export type EventPerformance = {
+  redeemed_tickets: number | null;
+  order_count: number | null;
+  revenue_cents: number | null;
+  headcount_woman: number | null;
+  headcount_man: number | null;
+  headcount_other: number | null;
+  headcount_undisclosed: number | null;
+  headcount_total: number | null;
+};
+
+export type EventPerformanceResponse = {
+  name: string;
+  title: string;
+  unit: string;
+  definition: string;
+  as_of: string | null;
+  data_quality: string;
+  data_source: string;
+  scope: string;
+  event: EventOut;
+  performance: EventPerformance;
+};
+
 export type GremialBenchmarks = {
   period_start: string;
   period_end: string;

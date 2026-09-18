@@ -56,6 +56,11 @@ export function AppShell({ children }: { children: ReactNode }) {
               Estudios
             </Link>
             {ready && token ? (
+              <Link href="/events" style={{ color: "var(--discover-ink)" }}>
+                Eventos
+              </Link>
+            ) : null}
+            {ready && token ? (
               <button
                 type="button"
                 onClick={() => {
