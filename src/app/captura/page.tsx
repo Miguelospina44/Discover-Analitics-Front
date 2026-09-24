@@ -12,7 +12,11 @@
 import { FormEvent, useState } from "react";
 import { DiscoverLogo } from "@/brand/DiscoverLogo";
 import { submitLead } from "@/lib/api";
-import { ApiError } from "@/lib/types";
+import {
+  EMPTY_LEAD_FIELDS,
+  handleLeadSubmit,
+  type LeadFields,
+} from "@/lib/leadForm";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -32,58 +36,27 @@ const labelStyle: React.CSSProperties = {
   marginBottom: 6,
 };
 
-type Fields = {
-  name: string;
-  phone: string;
-  birthDate: string;
-  email: string;
-};
-
-const EMPTY: Fields = { name: "", phone: "", birthDate: "", email: "" };
-
 export default function CapturaPage() {
-  const [fields, setFields] = useState<Fields>(EMPTY);
+  const [fields, setFields] = useState<LeadFields>(EMPTY_LEAD_FIELDS);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  function update(key: keyof Fields, value: string) {
+  function update(key: keyof LeadFields, value: string) {
     setFields((prev) => ({ ...prev, [key]: value }));
   }
 
-  function localValidation(): string | null {
-    if (fields.name.trim().length < 2) return "Contanos tu nombre.";
-    if (fields.phone.trim().length < 5) return "Dejanos un teléfono válido.";
-    if (!fields.birthDate) return "Elegí tu fecha de nacimiento.";
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(fields.email.trim())) {
-      return "Ese correo no se ve válido.";
-    }
-    return null;
-  }
-
-  async function onSubmit(e: FormEvent) {
-    e.preventDefault();
-    setError(null);
-    const localError = localValidation();
-    if (localError) {
-      setError(localError);
-      return;
-    }
-    setPending(true);
-    try {
-      const { redirect_url } = await submitLead({
-        name: fields.name.trim(),
-        phone: fields.phone.trim(),
-        birth_date: fields.birthDate,
-        email: fields.email.trim(),
-        source: "captura-web",
-      });
-      // Redirección real del navegador a Discover.
-      window.location.href = redirect_url;
-    } catch (err) {
-      if (err instanceof ApiError) setError(err.message);
-      else setError("No pudimos conectar con el API. Intentá de nuevo en un toque.");
-      setPending(false);
-    }
+  async function onSubmit(e: FormEvent<HTMLFormElement>) {
+    // preventDefault vive dentro de handleLeadSubmit y se ejecuta PRIMERO, de
+    // modo que el navegador nunca dispara el submit GET nativo. En éxito navega
+    // a redirect_url; en error muestra el mensaje inline sin navegar.
+    await handleLeadSubmit(e, fields, {
+      submit: submitLead,
+      navigate: (url) => {
+        window.location.href = url;
+      },
+      setError,
+      setPending,
+    });
   }
 
   return (
@@ -99,6 +72,8 @@ export default function CapturaPage() {
     >
       <form
         onSubmit={onSubmit}
+        method="post"
+        noValidate
         className="surface-card"
         style={{
           width: "100%",
@@ -166,7 +141,7 @@ export default function CapturaPage() {
         </label>
         <input
           type="date"
-          name="birthDate"
+          name="birth_date"
           autoComplete="bday"
           value={fields.birthDate}
           onChange={(e) => update("birthDate", e.target.value)}
