@@ -12,11 +12,7 @@
 import { FormEvent, useState } from "react";
 import { DiscoverLogo } from "@/brand/DiscoverLogo";
 import { submitLead } from "@/lib/api";
-import {
-  EMPTY_LEAD_FIELDS,
-  handleLeadSubmit,
-  type LeadFields,
-} from "@/lib/leadForm";
+import { EMPTY_LEAD_FIELDS, handleLeadSubmit } from "@/lib/leadForm";
 
 const inputStyle: React.CSSProperties = {
   width: "100%",
@@ -37,19 +33,17 @@ const labelStyle: React.CSSProperties = {
 };
 
 export default function CapturaPage() {
-  const [fields, setFields] = useState<LeadFields>(EMPTY_LEAD_FIELDS);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
-  function update(key: keyof LeadFields, value: string) {
-    setFields((prev) => ({ ...prev, [key]: value }));
-  }
-
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
-    // preventDefault vive dentro de handleLeadSubmit y se ejecuta PRIMERO, de
-    // modo que el navegador nunca dispara el submit GET nativo. En éxito navega
-    // a redirect_url; en error muestra el mensaje inline sin navegar.
-    await handleLeadSubmit(e, fields, {
+    // Los inputs son NO controlados a propósito: el navegador es la fuente de
+    // verdad y handleLeadSubmit lee sus valores del <form> vía FormData. Así el
+    // lead nunca se pierde por un desfase con el estado de React (escritura antes
+    // de hidratar, autocompletado o gestores de contraseñas). preventDefault vive
+    // dentro de handleLeadSubmit y corre PRIMERO, cancelando el submit nativo. En
+    // éxito navega a redirect_url; en error muestra el mensaje inline sin navegar.
+    await handleLeadSubmit(e, EMPTY_LEAD_FIELDS, {
       submit: submitLead,
       navigate: (url) => {
         window.location.href = url;
@@ -115,8 +109,7 @@ export default function CapturaPage() {
           type="text"
           name="name"
           autoComplete="name"
-          value={fields.name}
-          onChange={(e) => update("name", e.target.value)}
+          defaultValue=""
           placeholder="Tu nombre"
           required
           style={inputStyle}
@@ -129,8 +122,7 @@ export default function CapturaPage() {
           type="tel"
           name="phone"
           autoComplete="tel"
-          value={fields.phone}
-          onChange={(e) => update("phone", e.target.value)}
+          defaultValue=""
           placeholder="+57 300 000 0000"
           required
           style={inputStyle}
@@ -143,8 +135,7 @@ export default function CapturaPage() {
           type="date"
           name="birth_date"
           autoComplete="bday"
-          value={fields.birthDate}
-          onChange={(e) => update("birthDate", e.target.value)}
+          defaultValue=""
           required
           style={inputStyle}
         />
@@ -156,8 +147,7 @@ export default function CapturaPage() {
           type="email"
           name="email"
           autoComplete="email"
-          value={fields.email}
-          onChange={(e) => update("email", e.target.value)}
+          defaultValue=""
           placeholder="tucorreo@ejemplo.com"
           required
           style={{ ...inputStyle, marginBottom: "1.35rem" }}

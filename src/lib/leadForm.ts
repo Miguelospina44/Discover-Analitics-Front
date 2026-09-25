@@ -41,7 +41,44 @@ export function validateLeadFields(fields: LeadFields): string | null {
   return null;
 }
 
-type SubmittableEvent = { preventDefault: () => void };
+// El navegador es la ÚNICA fuente de verdad de lo que el visitante ve/escribe.
+// Leemos los valores directamente del <form> (FormData) en el submit, usando las
+// claves de los atributos name= (birth_date en snake_case). Así el lead se envía
+// aunque el estado de React nunca haya capturado los keystrokes: escritura antes
+// de la hidratación, autocompletado del navegador o gestores de contraseñas que
+// setean input.value sin disparar el onChange sintético de React. `fallback` solo
+// se usa cuando no hay <form> (p. ej. en pruebas unitarias del orquestador).
+export function readLeadFieldsFromForm(
+  form: HTMLFormElement,
+  fallback: LeadFields = EMPTY_LEAD_FIELDS,
+): LeadFields {
+  const data = new FormData(form);
+  const read = (key: string, fb: string): string => {
+    const value = data.get(key);
+    return typeof value === "string" ? value : fb;
+  };
+  return {
+    name: read("name", fallback.name),
+    phone: read("phone", fallback.phone),
+    birthDate: read("birth_date", fallback.birthDate),
+    email: read("email", fallback.email),
+  };
+}
+
+type SubmittableEvent = {
+  preventDefault: () => void;
+  currentTarget?: unknown;
+};
+
+// Extrae el <form> del evento de submit sin romper en entornos sin DOM (Node):
+// solo devuelve el elemento cuando HTMLFormElement existe y coincide.
+function formFromEvent(event: SubmittableEvent): HTMLFormElement | null {
+  const target = event.currentTarget;
+  if (typeof HTMLFormElement !== "undefined" && target instanceof HTMLFormElement) {
+    return target;
+  }
+  return null;
+}
 
 export type LeadSubmitDeps = {
   submit?: typeof defaultSubmitLead;
@@ -51,16 +88,19 @@ export type LeadSubmitDeps = {
 };
 
 // Orquesta el envío del formulario:
-// 1) preventDefault SIEMPRE primero, para que el navegador no haga el GET nativo.
-// 2) validación local; si falla, muestra error y no navega.
-// 3) POST /api/v1/leads con birth_date; en éxito navega a redirect_url.
-// 4) en error, muestra el error inline y NO navega.
+// 1) preventDefault SIEMPRE primero, para que el navegador no haga el submit nativo.
+// 2) lee los campos del DOM (FormData); el `fallback` de React solo aplica sin form.
+// 3) validación local; si falla, muestra error y no navega.
+// 4) POST /api/v1/leads con birth_date; en éxito navega a redirect_url.
+// 5) en error, muestra el error inline y NO navega.
 export async function handleLeadSubmit(
   event: SubmittableEvent,
-  fields: LeadFields,
+  fallback: LeadFields,
   deps: LeadSubmitDeps,
 ): Promise<void> {
   event.preventDefault();
+  const form = formFromEvent(event);
+  const fields = form ? readLeadFieldsFromForm(form, fallback) : fallback;
   const submit = deps.submit ?? defaultSubmitLead;
   deps.setError(null);
 
