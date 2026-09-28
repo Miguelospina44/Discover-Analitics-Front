@@ -2,6 +2,7 @@ import {
   ApiError,
   type AccountOut,
   type AttendanceMeasure,
+  type AudienceProfileResponse,
   type EventOut,
   type EventPerformanceResponse,
   type GenderMeasure,
@@ -165,6 +166,28 @@ export async function fetchEvent(
   });
   if (!res.ok) await parseError(res);
   return res.json() as Promise<EventPerformanceResponse>;
+}
+
+export type AudienceQuery = {
+  periodStart: string;
+  periodEnd: string;
+  accountId?: string | null;
+};
+
+export async function fetchAudienceProfile(
+  token: string,
+  query: AudienceQuery,
+): Promise<AudienceProfileResponse> {
+  const qs = new URLSearchParams({
+    period_start: query.periodStart,
+    period_end: query.periodEnd,
+  });
+  if (query.accountId) qs.set("account_id", query.accountId);
+  const res = await fetch(apiUrl(`/api/v1/metrics/audience?${qs}`), {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) await parseError(res);
+  return res.json() as Promise<AudienceProfileResponse>;
 }
 
 export async function fetchGremialBenchmarks(

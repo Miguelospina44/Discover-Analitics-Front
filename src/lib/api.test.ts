@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiUrl, fetchEvent, fetchEvents, login } from "./api";
+import { apiUrl, fetchAudienceProfile, fetchEvent, fetchEvents, login } from "./api";
 import { ApiError } from "./types";
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -118,6 +118,45 @@ describe("fetchEvents", () => {
       vi.fn(async () => jsonResponse({ detail: "No autorizado" }, 403)),
     );
     await expect(fetchEvents("tok")).rejects.toMatchObject({ status: 403, message: "No autorizado" });
+  });
+});
+
+describe("fetchAudienceProfile", () => {
+  it("requests the relative audience path with the period query", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ segments: [] }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchAudienceProfile("tok", { periodStart: "2026-08-01", periodEnd: "2026-08-14" });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(
+      "/api/v1/metrics/audience?period_start=2026-08-01&period_end=2026-08-14",
+    );
+    expect((init?.headers as Record<string, string>).Authorization).toBe("Bearer tok");
+  });
+
+  it("appends account_id when provided", async () => {
+    const fetchMock = vi.fn(async () => jsonResponse({ segments: [] }));
+    vi.stubGlobal("fetch", fetchMock);
+
+    await fetchAudienceProfile("tok", {
+      periodStart: "2026-08-01",
+      periodEnd: "2026-08-14",
+      accountId: "acc-9",
+    });
+    const [url] = fetchMock.mock.calls[0];
+    expect(url).toBe(
+      "/api/v1/metrics/audience?period_start=2026-08-01&period_end=2026-08-14&account_id=acc-9",
+    );
+  });
+
+  it("throws an ApiError carrying the backend detail on failure", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse({ detail: "No autorizado" }, 403)),
+    );
+    await expect(
+      fetchAudienceProfile("tok", { periodStart: "2026-08-01", periodEnd: "2026-08-14" }),
+    ).rejects.toMatchObject({ status: 403, message: "No autorizado" });
   });
 });
 
