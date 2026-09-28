@@ -98,6 +98,30 @@ export type EventPerformanceResponse = {
   performance: EventPerformance;
 };
 
+export type AudienceDimension = "gender" | "age_band" | "zone" | "recurrence";
+
+/** Bucket ANÓNIMO de audiencia: conteo + share dentro de su dimensión. Sin PII. */
+export type AudienceSegment = {
+  dimension: AudienceDimension | string;
+  key: string;
+  headcount: number;
+  share: number;
+};
+
+export type AudienceProfileResponse = {
+  name: string;
+  title: string;
+  unit: string;
+  definition: string;
+  as_of: string | null;
+  data_quality: string;
+  data_source: string;
+  scope: string;
+  period_start: string;
+  period_end: string;
+  segments: AudienceSegment[];
+};
+
 export type GremialBenchmarks = {
   period_start: string;
   period_end: string;
