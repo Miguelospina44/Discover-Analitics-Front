@@ -404,3 +404,121 @@ a:hover {
   border-top: 1px solid var(--color-line);
   margin: 0;
 }
+
+/* ---- Loading screen (rotación de tipos de gráfica) ---- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.da-loader-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 2rem 1.5rem;
+  /* fondo ligeramente opaco */
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+}
+
+.da-loader-inline {
+  display: grid;
+  place-items: center;
+  padding: 3rem 1.5rem;
+  margin-bottom: 2rem;
+  border-radius: var(--radius-card);
+  /* fondo ligeramente opaco también en modo inline */
+  background: rgba(255, 255, 255, 0.55);
+}
+
+.da-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: center;
+}
+
+.da-loader__stage {
+  position: relative;
+  width: 104px;
+  height: 104px;
+  display: grid;
+  place-items: center;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid var(--discover-line);
+  box-shadow: var(--shadow-card);
+}
+
+/* anillo punteado girando = sensación de carga + "rotación" */
+.da-loader__stage::before {
+  content: "";
+  position: absolute;
+  inset: -9px;
+  border-radius: 30px;
+  border: 2px dashed var(--discover-yellow);
+  opacity: 0.85;
+  animation: da-ring-spin 3.6s linear infinite;
+}
+
+.da-loader__glyph {
+  display: grid;
+  place-items: center;
+  transform-origin: center;
+  animation: da-chart-pop 0.95s ease both;
+}
+
+.da-loader__caption {
+  margin: 0;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  color: var(--discover-storm);
+}
+
+.da-loader__subtitle {
+  margin: 0;
+  max-width: 300px;
+  font-size: 0.95rem;
+  font-style: italic;
+  color: var(--discover-ink-soft);
+}
+
+@keyframes da-chart-pop {
+  0% {
+    opacity: 0;
+    transform: rotate(-14deg) scale(0.68);
+  }
+  45% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 1;
+    transform: rotate(0) scale(1);
+  }
+}
+
+@keyframes da-ring-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .da-loader__glyph {
+    animation: none;
+  }
+  .da-loader__stage::before {
+    animation: none;
+  }
+}

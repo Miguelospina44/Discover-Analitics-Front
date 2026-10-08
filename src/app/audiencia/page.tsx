@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "r
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/brand/EmptyState";
+import { LoadingScreen } from "@/brand/LoadingScreen";
 import { chartSeries } from "@/brand/chart-tokens";
 import { fetchAccounts, fetchAudienceProfile } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
@@ -161,13 +162,7 @@ export default function AudienciaPage() {
   };
 
   if (!ready || !token || !me) {
-    return (
-      <main style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)" }}>
-          Cargando el parche…
-        </p>
-      </main>
-    );
+    return <LoadingScreen fullscreen subtitle="Preparando tu parche…" />;
   }
 
   const scopeLabel = showClientPicker
@@ -272,9 +267,7 @@ export default function AudienciaPage() {
       ) : null}
 
       {loading && !hasData ? (
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)", marginBottom: "2rem" }}>
-          Cargando tu público…
-        </p>
+        <LoadingScreen subtitle="Armando tu público…" />
       ) : null}
 
       {!error && !loading && !hasData ? (

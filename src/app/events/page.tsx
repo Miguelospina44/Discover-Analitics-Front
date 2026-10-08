@@ -12,6 +12,7 @@ import {
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { EmptyState } from "@/brand/EmptyState";
+import { LoadingScreen } from "@/brand/LoadingScreen";
 import { fetchAccounts, fetchEvent, fetchEvents, fetchVenues } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useFilters } from "@/lib/filters";
@@ -184,13 +185,7 @@ export default function EventsPage() {
   };
 
   if (!ready || !token || !me) {
-    return (
-      <main style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)" }}>
-          Cargando el parche…
-        </p>
-      </main>
-    );
+    return <LoadingScreen fullscreen subtitle="Preparando tu parche…" />;
   }
 
   const scopeLabel = showClientPicker
@@ -318,12 +313,7 @@ export default function EventsPage() {
       ) : null}
 
       {loading && events.length === 0 ? (
-        <p
-          className="font-glora-l"
-          style={{ color: "var(--discover-storm)", marginBottom: "2rem" }}
-        >
-          Cargando el parche…
-        </p>
+        <LoadingScreen subtitle="Trayendo los eventos…" />
       ) : null}
 
       {!error && !loading && events.length === 0 ? (

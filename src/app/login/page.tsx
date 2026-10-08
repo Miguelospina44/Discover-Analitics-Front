@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DiscoverLogo } from "@/brand/DiscoverLogo";
+import { LoadingScreen } from "@/brand/LoadingScreen";
 import { useAuth } from "@/lib/auth";
 import { ApiError, DEMO_LOGINS } from "@/lib/types";
 
@@ -46,13 +47,7 @@ export default function LoginPage() {
   }
 
   if (!ready || token) {
-    return (
-      <main style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)" }}>
-          Cargando el parche…
-        </p>
-      </main>
-    );
+    return <LoadingScreen fullscreen subtitle="Abriendo Discover…" />;
   }
 
   return (

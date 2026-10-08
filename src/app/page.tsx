@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { EmptyState } from "@/brand/EmptyState";
 import { DiscoverLogo } from "@/brand/DiscoverLogo";
 import { FilterBar } from "@/brand/FilterBar";
+import { LoadingScreen } from "@/brand/LoadingScreen";
 
 const GenderMixChart = dynamic(
   () => import("@/brand/charts/GenderMixChart").then((m) => m.GenderMixChart),
@@ -173,13 +174,7 @@ export default function HomePage() {
   }, [sales, venueNameById]);
 
   if (!ready || !token || !me) {
-    return (
-      <main style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)" }}>
-          Cargando el parche…
-        </p>
-      </main>
-    );
+    return <LoadingScreen fullscreen subtitle="Preparando tu parche…" />;
   }
 
   const tickets = attendance ? sumRedeemed(attendance.points) : 0;
@@ -244,9 +239,7 @@ export default function HomePage() {
       />
 
       {bootLoading && !attendance ? (
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)", marginBottom: "2rem" }}>
-          Cargando el parche…
-        </p>
+        <LoadingScreen subtitle="Trayendo tus métricas…" />
       ) : null}
 
       {error ? (
