@@ -75,8 +75,25 @@ export function Landing() {
             flexWrap: "wrap",
           }}
         >
-          <Link href="/login" className="btn-discover" style={{ borderBottom: "none" }}>
-            Entrar
+          <Link href="/captura" className="btn-discover" style={{ borderBottom: "none" }}>
+            Entrar a Discover
+          </Link>
+          <Link
+            href="/login"
+            className="font-glora"
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              padding: "0.75rem 1.35rem",
+              borderRadius: "var(--radius-pill)",
+              border: "1px solid var(--discover-obsidian)",
+              background: "rgba(255,255,255,0.55)",
+              color: "var(--discover-obsidian)",
+              borderBottom: "1px solid var(--discover-obsidian)",
+              textDecoration: "none",
+            }}
+          >
+            Soy cliente
           </Link>
           <a
             href="#que-hace"

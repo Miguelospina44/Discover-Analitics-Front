@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { apiUrl, fetchEvent, fetchEvents, login } from "./api";
+import { apiUrl, fetchEvent, fetchEvents, login, submitLead } from "./api";
 import { ApiError } from "./types";
 
 function jsonResponse(body: unknown, status = 200): Response {
@@ -118,6 +118,42 @@ describe("fetchEvents", () => {
       vi.fn(async () => jsonResponse({ detail: "No autorizado" }, 403)),
     );
     await expect(fetchEvents("tok")).rejects.toMatchObject({ status: 403, message: "No autorizado" });
+  });
+});
+
+describe("submitLead", () => {
+  const payload = {
+    name: "Prueba",
+    phone: "+57 300 000 0000",
+    birth_date: "1998-05-20",
+    email: "prueba@example.com",
+    source: "captura-web",
+  };
+
+  it("POSTs to the public leads path without an auth header and returns the redirect", async () => {
+    const fetchMock = vi.fn(async () =>
+      jsonResponse({ id: "lead-1", redirect_url: "https://discover-co.com" }, 201),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(submitLead(payload)).resolves.toEqual({
+      id: "lead-1",
+      redirect_url: "https://discover-co.com",
+    });
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/v1/leads");
+    expect(init?.method).toBe("POST");
+    expect((init?.headers as Record<string, string>).Authorization).toBeUndefined();
+    expect(JSON.parse(init?.body as string)).toEqual(payload);
+  });
+
+  it("throws an ApiError carrying the backend detail on a 422", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => jsonResponse({ detail: "value is not a valid email address" }, 422)),
+    );
+    await expect(submitLead(payload)).rejects.toMatchObject({ status: 422 });
+    await expect(submitLead(payload)).rejects.toBeInstanceOf(ApiError);
   });
 });
 

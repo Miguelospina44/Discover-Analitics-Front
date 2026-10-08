@@ -138,6 +138,21 @@ export const DEMO_LOGINS = [
   },
 ] as const;
 
+// Lead-capture público (PII). Flujo separado de la analítica anónima: recoge
+// datos de contacto de un visitante antes de redirigirlo a Discover.
+export type LeadCreate = {
+  name: string;
+  phone: string;
+  birth_date: string;
+  email: string;
+  source?: string | null;
+};
+
+export type LeadCaptureResponse = {
+  id: string;
+  redirect_url: string;
+};
+
 export class ApiError extends Error {
   status: number;
 

@@ -6,6 +6,8 @@ import {
   type EventPerformanceResponse,
   type GenderMeasure,
   type GremialBenchmarks,
+  type LeadCaptureResponse,
+  type LeadCreate,
   type MeResponse,
   type Period,
   type SalesMeasure,
@@ -66,6 +68,19 @@ function metricQs(q: MetricQuery, opts?: { includeGender?: boolean }): URLSearch
   if (q.venueId) qs.set("venue_id", q.venueId);
   if (opts?.includeGender !== false && q.gender) qs.set("gender", q.gender);
   return qs;
+}
+
+// Flujo PÚBLICO de captura de leads (sin token). Envía PII al backend y devuelve
+// el destino de redirección hacia Discover. Se mantiene separado de la analítica
+// anónima autenticada.
+export async function submitLead(payload: LeadCreate): Promise<LeadCaptureResponse> {
+  const res = await fetch(apiUrl("/api/v1/leads"), {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  if (!res.ok) await parseError(res);
+  return res.json() as Promise<LeadCaptureResponse>;
 }
 
 export async function fetchMe(token: string): Promise<MeResponse> {
