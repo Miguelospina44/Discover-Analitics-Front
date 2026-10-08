@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { EmptyState } from "@/brand/EmptyState";
 import { DiscoverLogo } from "@/brand/DiscoverLogo";
 import { FilterBar } from "@/brand/FilterBar";
+import { Landing } from "@/brand/Landing";
 
 const GenderMixChart = dynamic(
   () => import("@/brand/charts/GenderMixChart").then((m) => m.GenderMixChart),
@@ -76,10 +77,6 @@ export default function HomePage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasMetricsRef = useRef(false);
-
-  useEffect(() => {
-    if (ready && !token) router.replace("/login");
-  }, [ready, token, router]);
 
   const showClientPicker = me?.role === "super_admin" && isSuperAdmin;
 
@@ -171,6 +168,12 @@ export default function HomePage() {
     }
     return { ...pivot, venueLabels };
   }, [sales, venueNameById]);
+
+  // Public landing: unauthenticated visitors see the marketing page at "/",
+  // authenticated users keep the hub below.
+  if (ready && !token) {
+    return <Landing />;
+  }
 
   if (!ready || !token || !me) {
     return (
