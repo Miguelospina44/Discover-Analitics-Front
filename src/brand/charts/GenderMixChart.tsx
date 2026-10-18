@@ -81,9 +81,11 @@ export function GenderMixChart({ points, activeGender, onToggleGender }: Props) 
           />
           <Legend
             verticalAlign="bottom"
-            height={36}
+            height={48}
+            iconType="circle"
+            iconSize={8}
             formatter={(value) => (
-              <span style={{ color: chartTheme.axis, fontSize: 12 }}>{value}</span>
+              <span style={{ color: chartTheme.axis, fontSize: 12, paddingRight: 10 }}>{value}</span>
             )}
           />
         </PieChart>

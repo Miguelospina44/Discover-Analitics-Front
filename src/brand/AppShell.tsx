@@ -46,7 +46,7 @@ export function AppShell({ children }: { children: ReactNode }) {
             }}
           >
             {ready && me ? (
-              <span style={{ color: "var(--color-muted)", fontSize: "var(--step-small)" }}>
+              <span className="shell-account">
                 {me.account_name ?? copy.nav.accountFallback} · {roleLabel(me.role)}
               </span>
             ) : null}
