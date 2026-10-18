@@ -3,12 +3,13 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DiscoverLogo } from "@/brand/DiscoverLogo";
+import { DashboardSkeleton } from "@/brand/Skeleton";
 import { copy } from "@/copy";
 import { useAuth } from "@/lib/auth";
 import { ApiError, DEMO_LOGINS } from "@/lib/types";
 
 export default function LoginPage() {
-  const { token, ready, login } = useAuth();
+  const { token, ready, isDemo, login, enterDemo } = useAuth();
   const router = useRouter();
   const [email, setEmail] = useState<string>(DEMO_LOGINS[0].email);
   const [password, setPassword] = useState<string>(DEMO_LOGINS[0].password);
@@ -16,8 +17,8 @@ export default function LoginPage() {
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
-    if (ready && token) router.replace("/");
-  }, [ready, token, router]);
+    if (ready && (token || isDemo)) router.replace("/");
+  }, [ready, token, isDemo, router]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -34,56 +35,41 @@ export default function LoginPage() {
     }
   }
 
-  if (!ready || token) {
+  if (!ready || token || isDemo) {
     return (
-      <main style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-        <p className="font-glora-l" style={{ color: "var(--discover-cloud)" }}>
-          {copy.loading}
-        </p>
+      <main className="page-wrap">
+        <p className="page-kicker">{copy.loading}</p>
+        <DashboardSkeleton />
       </main>
     );
   }
 
   return (
     <main
-      className="pattern-stamp"
       style={{
-        minHeight: "70vh",
+        minHeight: "70dvh",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "2.5rem 1.25rem",
+        padding: "var(--space-page)",
       }}
     >
       <form
         onSubmit={onSubmit}
         className="surface-card"
-        style={{
-          width: "100%",
-          maxWidth: 420,
-          padding: "2.25rem 1.75rem",
-          boxShadow: "var(--glow-subtle)",
-          borderTop: "2px solid var(--discover-champagne)",
-        }}
+        style={{ width: "100%", maxWidth: 420, padding: "2.25rem 1.75rem" }}
       >
-        <div style={{ marginBottom: "1.5rem" }}>
+        <div style={{ marginBottom: "1.35rem" }}>
           <DiscoverLogo variant="primary" />
         </div>
-        <p
-          className="font-glora-l"
-          style={{
-            color: "var(--discover-cloud)",
-            marginBottom: "1.35rem",
-            lineHeight: 1.55,
-            fontSize: "0.98rem",
-          }}
-        >
+        <h1 className="page-title" style={{ fontSize: "1.65rem" }}>
+          {copy.login.title}
+        </h1>
+        <p className="page-lead" style={{ marginBottom: "1.5rem" }}>
           {copy.login.intro}
         </p>
-        <p className="scope-picker__label" style={{ marginBottom: "0.55rem" }}>
-          {copy.login.demoHint}
-        </p>
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.35rem", flexWrap: "wrap" }}>
+        <p className="field-label">{copy.login.demoHint}</p>
+        <div style={{ display: "flex", gap: "0.4rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
           {DEMO_LOGINS.map((demo) => (
             <button
               key={demo.email}
@@ -99,11 +85,7 @@ export default function LoginPage() {
             </button>
           ))}
         </div>
-        <label
-          className="font-glora-xl"
-          htmlFor="login-email"
-          style={{ display: "block", color: "var(--discover-cloud)", marginBottom: 6 }}
-        >
+        <label className="field-label" htmlFor="login-email">
           {copy.login.email}
         </label>
         <input
@@ -116,11 +98,7 @@ export default function LoginPage() {
           className="input-field"
           style={{ marginBottom: "1rem" }}
         />
-        <label
-          className="font-glora-xl"
-          htmlFor="login-password"
-          style={{ display: "block", color: "var(--discover-cloud)", marginBottom: 6 }}
-        >
+        <label className="field-label" htmlFor="login-password">
           {copy.login.password}
         </label>
         <input
@@ -131,19 +109,26 @@ export default function LoginPage() {
           onChange={(e) => setPassword(e.target.value)}
           required
           className="input-field"
-          style={{ marginBottom: "1.35rem" }}
+          style={{ marginBottom: "1.25rem" }}
         />
         {error ? (
-          <p
-            className="font-glora"
-            style={{ color: "var(--discover-terracotta)", marginBottom: "1rem", fontSize: "0.9rem" }}
-            role="alert"
-          >
+          <p className="status-error font-glora" style={{ marginBottom: "1rem" }} role="alert">
             {error}
           </p>
         ) : null}
         <button type="submit" className="btn-discover" style={{ width: "100%" }} disabled={pending}>
           {pending ? copy.login.submitting : copy.login.submit}
+        </button>
+        <button
+          type="button"
+          className="btn-quiet"
+          style={{ width: "100%", marginTop: "0.65rem" }}
+          onClick={() => {
+            enterDemo();
+            router.replace("/");
+          }}
+        >
+          {copy.login.preview}
         </button>
       </form>
     </main>

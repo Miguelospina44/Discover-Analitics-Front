@@ -1,59 +1,52 @@
 # DISCOVER Analytics — Design System
 
-Tema **oscuro ejecutivo**. Más sobrio que Discover consumidor: canvas grafito, superficies limpias y un acento champagne contenido. Usuarios = dueños y líderes de negocio.
+Tema **oscuro ejecutivo** para un producto de datos: canvas grafito, superficies planas y un acento champagne contenido. Usuarios = dueños y líderes. Menos ruido que Discover consumidor.
+
+Criterio visual: skill `design-taste-frontend` (Leonxlnx/taste-skill, commit `f624f37a8c650b9cc550253104925efe4c8de246`), adaptada a un panel (no a una landing). Diales: variación baja, movimiento sutil, densidad media. Sin fotos decorativas, sin emojis, un solo set de íconos (Phosphor, peso regular).
 
 ## Color
 
-| Token | HEX | Uso | Contraste (aprox.) |
+| Token | HEX | Uso | Contraste |
 |---|---|---|---|
-| Night | `#0F1419` | Fondo profundo, texto sobre CTA | — |
-| Graphite | `#1A1D23` | Lienzo base | — |
-| Steel | `#252932` | Superficies, tarjetas | — |
-| Slate | `#3A3F4B` | Bordes, divisores | — |
-| Fog | `#6D7484` | Bordes fuertes, estados inactivos | no usar como texto pequeño |
-| Cloud | `#B4BBC8` | Texto secundario, ejes | ~7.5:1 sobre Steel (AA+) |
-| Pearl | `#E8EAF0` | Texto principal, títulos | ~14:1 sobre Graphite (AAA) |
-| Champagne | `#C9A86D` | CTA, acento, serie 1 | ~8:1 texto night sobre champagne (AA+) |
+| Night | `#0F1419` | Barra superior, texto sobre CTA | — |
+| Graphite | `#161A20` | Lienzo | — |
+| Steel | `#1E232C` | Superficies | — |
+| Slate | `#2A303A` | Superficie activa, skeleton | — |
+| Fog | `#6D7484` | No usar como texto de cuerpo | — |
+| Cloud | `#B4BBC8` | Texto secundario | AA+ sobre graphite/steel |
+| Pearl | `#E8EAF0` | Texto principal | AAA sobre graphite |
+| Champagne | `#C9A86D` | Único acento (CTA y un aviso) | AA texto night sobre champagne |
 
-Series de gráficas: `#C9A86D` → `#6B8CAE` → `#7FA885` → `#9B869B`. Alerta / caída `#C67B6B`. Positivo `#7FA885`. Fondo de plot **transparente**.
+Series: `#C9A86D` → `#6B8CAE` → `#7FA885` → `#9B869B`. Alerta `#C67B6B`. Positivo `#7FA885`.
 
-Validación WCAG AA: texto perla y cloud sobre graphite/steel; CTA champagne con ink night; sage y terracotta como estados semánticos (≥ 4.5:1 sobre graphite). Fog no se usa como copy de cuerpo.
+El acento ocupa poco de cada pantalla. El resto es tono: graphite / steel / pearl.
 
-## Superficies (`.surface-card`)
+## Superficies
 
-- `backdrop-filter: blur(18px) saturate(115%)`
-- Fill `rgba(37, 41, 50, 0.82)`
-- Border `rgba(180, 187, 200, 0.12)`
-- Sombra `0 10px 36px rgba(0, 0, 0, 0.32)`
-- Radio **0.85rem**
-- CTA sólido champagne — nunca glass en botones
-- Fallback: `@supports not (backdrop-filter)` y `prefers-reduced-transparency: reduce` → steel opaco
+Sin vidrio, sin sombras en reposo, sin degradados ni orbes. Una superficie se distingue del lienzo por un paso de tono (`--color-surface`). Radio **0.5rem**. El CTA es champagne plano.
 
-Header: `.shell-header` (blur 18px, fill ~78%).
-
-Fondo: `.app-backdrop` (radiales champagne / slate blue / sage, muy bajos) + `--discover-graphite`.
+Header: `.shell-header` sólido night. Fondo: `.app-backdrop` graphite plano.
 
 ## Tipografía
 
-- **Blogh** — display (mayúsculas, tracking amplio). Títulos de sección.
-- **ZT Glora Pro** — UI
-  - ExtraLight (200) — metadatos
-  - Light (300) — cuerpo
-  - Regular (400) — controles, cifras KPI
-
-Jerarquía: título de negocio (pregunta) → definición breve → cifra o gráfica. Más aire entre bloques que en Discover consumidor.
-
-## Logo
-
-Wordmark **perla** sobre oscuro. Subtítulo **Analytics** (no el tagline juvenil de Discover). Champagne solo en CTA o acento.
+- **Blogh** — solo el wordmark DISCOVER.
+- **ZT Glora Pro** — toda la UI. Títulos de sección en frase (no versales).
+- Escala corta: small 13px, body 17px, lead 20px, título de página ~34px, KPI fluido.
+- Cifras: `tabular-nums`.
 
 ## Componentes
 
-- **KPI**: label uppercase cloud, cifra perla tabular, hint de alcance.
-- **Filtros**: chips transparentes; activo = champagne sólido.
-- **Gráficas**: ejes cloud, grid al 10% de perla, tooltip steel.
-- **Vacío / error**: explicación + siguiente paso; sin dramatismo.
+- **KPI**: tres cifras (ingresos, asistencia, órdenes). Label sentence-case, cifra grande.
+- **Filtros**: chips en graphite; activo = slate. Champagne no se usa en chips.
+- **Gráficas**: ejes cloud, grid muy suave (funcional, no decorativo), tooltip steel.
+- **Carga**: skeleton con la forma del panel.
+- **Vacío / error**: explicación + siguiente paso. Ícono Phosphor único.
+- **Ejemplo**: banner “datos de ejemplo” cuando se entra con *Ver un panel de ejemplo*.
+
+## Motion
+
+Solo `opacity` y `transform`. Hover/pressed en botones, pulso del skeleton. `prefers-reduced-motion: reduce` apaga animaciones.
 
 ## Copy
 
-Español ejecutivo. Fuente: [`src/copy.ts`](../src/copy.ts). Guía: [`docs/voice-and-tone.md`](voice-and-tone.md).
+Español ejecutivo, usted/su. Fuente: [`src/copy.ts`](../src/copy.ts). Guía: [`docs/voice-and-tone.md`](voice-and-tone.md).

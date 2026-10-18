@@ -48,7 +48,7 @@ export function GenderMixChart({ points, activeGender, onToggleGender }: Props) 
             outerRadius={98}
             paddingAngle={3}
             stroke={chartTheme.tooltipBg}
-            strokeWidth={2}
+            strokeWidth={3}
             isAnimationActive={false}
             cursor={onToggleGender ? "pointer" : undefined}
             onClick={(_, index) => {

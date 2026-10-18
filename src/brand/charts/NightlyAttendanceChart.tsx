@@ -48,7 +48,7 @@ export function NightlyAttendanceChart({
     >
       <ResponsiveContainer>
         <LineChart data={rows} margin={{ top: 10, right: 12, left: 0, bottom: 4 }}>
-          <CartesianGrid stroke={chartTheme.grid} vertical={false} />
+          <CartesianGrid stroke={chartTheme.grid} vertical={false} strokeDasharray="0" />
           <XAxis
             dataKey="night_date"
             tick={{ fill: chartTheme.axis, fontSize: 11 }}

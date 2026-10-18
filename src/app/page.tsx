@@ -1,18 +1,14 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Info } from "@phosphor-icons/react";
+import { ChartBlock } from "@/brand/ChartBlock";
 import { EmptyState } from "@/brand/EmptyState";
-import { DiscoverLogo } from "@/brand/DiscoverLogo";
 import { FilterBar } from "@/brand/FilterBar";
+import { KpiCard } from "@/brand/KpiCard";
+import { DashboardSkeleton } from "@/brand/Skeleton";
 import { copy } from "@/copy";
 
 const GenderMixChart = dynamic(
@@ -37,6 +33,16 @@ import {
   fetchVenues,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import {
+  DEMO_ACCOUNTS,
+  DEMO_ATTENDANCE,
+  DEMO_BENCH,
+  DEMO_EMPTY_ATTENDANCE,
+  DEMO_EMPTY_SALES,
+  DEMO_GENDER,
+  DEMO_SALES,
+  DEMO_VENUES,
+} from "@/lib/demo-data";
 import { useFilters, type GenderFilter } from "@/lib/filters";
 import {
   formatCount,
@@ -57,8 +63,29 @@ import {
   type VenueOut,
 } from "@/lib/types";
 
-export default function HomePage() {
-  const { token, me, ready, isSuperAdmin, logout } = useAuth();
+type Vista = "datos" | "vacio" | "carga" | "error";
+
+function readVista(raw: string | null): Vista {
+  if (raw === "vacio" || raw === "carga" || raw === "error") return raw;
+  return "datos";
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <main className="page-wrap">
+          <DashboardSkeleton />
+        </main>
+      }
+    >
+      <HomePage />
+    </Suspense>
+  );
+}
+
+function HomePage() {
+  const { token, me, ready, isSuperAdmin, isDemo, logout } = useAuth();
   const {
     period,
     accountId,
@@ -68,6 +95,8 @@ export default function HomePage() {
     toggleGender,
   } = useFilters();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const vista = readVista(searchParams.get("vista"));
   const [accounts, setAccounts] = useState<AccountOut[]>([]);
   const [venues, setVenues] = useState<VenueOut[]>([]);
   const [attendance, setAttendance] = useState<AttendanceMeasure | null>(null);
@@ -79,14 +108,47 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const hasMetricsRef = useRef(false);
 
+  const signedIn = Boolean(token || isDemo);
+
   useEffect(() => {
-    if (ready && !token) router.replace("/login");
-  }, [ready, token, router]);
+    if (ready && !signedIn) router.replace("/login");
+  }, [ready, signedIn, router]);
 
   const showClientPicker = me?.role === "super_admin" && isSuperAdmin;
 
+  const applyDemo = useCallback(
+    (mode: Vista) => {
+      setAccounts(DEMO_ACCOUNTS);
+      setVenues(DEMO_VENUES);
+      setBench(DEMO_BENCH);
+      setGenderMeasure(DEMO_GENDER);
+      if (mode === "vacio") {
+        setAttendance(DEMO_EMPTY_ATTENDANCE);
+        setSales(DEMO_EMPTY_SALES);
+        setError(null);
+      } else if (mode === "error") {
+        setAttendance(null);
+        setSales(null);
+        setError(copy.errors.metrics);
+      } else {
+        setAttendance(DEMO_ATTENDANCE);
+        setSales(DEMO_SALES);
+        setError(null);
+      }
+      hasMetricsRef.current = true;
+      setBootLoading(mode === "carga");
+      setRefreshing(false);
+    },
+    [],
+  );
+
   const load = useCallback(async () => {
-    if (!token || !me) return;
+    if (!me) return;
+    if (isDemo) {
+      applyDemo(vista);
+      return;
+    }
+    if (!token) return;
     const soft = hasMetricsRef.current;
     if (soft) setRefreshing(true);
     else setBootLoading(true);
@@ -131,6 +193,9 @@ export default function HomePage() {
   }, [
     token,
     me,
+    isDemo,
+    vista,
+    applyDemo,
     period,
     accountId,
     venueId,
@@ -141,8 +206,8 @@ export default function HomePage() {
   ]);
 
   useEffect(() => {
-    if (ready && token && me) void load();
-  }, [ready, token, me, load]);
+    if (ready && signedIn && me) void load();
+  }, [ready, signedIn, me, load]);
 
   const venueNameById = useMemo(() => {
     const map: Record<string, string> = {};
@@ -170,12 +235,11 @@ export default function HomePage() {
     return { ...pivot, venueLabels };
   }, [sales, venueNameById]);
 
-  if (!ready || !token || !me) {
+  if (!ready || !signedIn || !me) {
     return (
-      <main style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-        <p className="font-glora-l" style={{ color: "var(--discover-cloud)" }}>
-          {copy.loading}
-        </p>
+      <main className="page-wrap">
+        <p className="page-kicker">{copy.loading}</p>
+        <DashboardSkeleton />
       </main>
     );
   }
@@ -201,41 +265,40 @@ export default function HomePage() {
       sales.points.length === 0 ||
       sales.data_quality === "missing");
 
+  const nightsCount = attendancePivot?.rows.length ?? 0;
+  const avgAttendance = nightsCount > 0 ? tickets / Math.max(venues.length || 1, 1) / nightsCount : null;
+  const avgOrders = nightsCount > 0 ? orders / Math.max(venues.length || 1, 1) / nightsCount : null;
+
   const onToggleGender = (g: string) => {
     toggleGender(g as NonNullable<GenderFilter>);
   };
 
   return (
-    <main style={{ maxWidth: 1120, margin: "0 auto", padding: "2.75rem 1.5rem 4.5rem" }}>
-      <section style={{ marginBottom: "1.75rem" }}>
-        <DiscoverLogo variant="primary" />
-        <p
-          className="font-glora-l"
-          style={{
-            color: "var(--discover-cloud)",
-            maxWidth: 640,
-            marginTop: "1.15rem",
-            fontSize: "1.05rem",
-            lineHeight: 1.55,
-            fontWeight: 300,
-          }}
-        >
-          {isSuperAdmin
-            ? copy.dashboard.introAdmin
-            : copy.dashboard.introOwner(me.account_name ?? copy.dashboard.scopeBusiness)}
-        </p>
-        <p
-          className="font-glora-xl"
-          style={{ color: "var(--discover-cloud)", marginTop: "0.85rem", fontSize: "0.85rem" }}
-        >
+    <main className="page-wrap">
+      <p className="page-kicker">{copy.dashboard.kicker}</p>
+      <h1 className="page-title">{copy.dashboard.title}</h1>
+      <p className="page-lead">
+        {isSuperAdmin
+          ? copy.dashboard.introAdmin
+          : copy.dashboard.introOwner(me.account_name ?? copy.dashboard.scopeBusiness)}
+      </p>
+      <div className="meta-row">
+        <span>
           {period.start} → {period.end}
-          {" · "}
-          <span style={{ color: "var(--discover-pearl)", fontWeight: 400 }}>{scopeLabel}</span>
-          {" · "}
-          {source}
-          {refreshing ? ` · ${copy.refreshing}` : ""}
+        </span>
+        <span>{scopeLabel}</span>
+        <span>{source}</span>
+        {refreshing ? <span>{copy.refreshing}</span> : null}
+      </div>
+
+      {isDemo ? (
+        <p className="banner-demo" role="status" style={{ marginTop: "1.5rem" }}>
+          <Info size={18} weight="regular" aria-hidden />
+          <span>{copy.demo.banner}</span>
         </p>
-      </section>
+      ) : (
+        <div style={{ height: "1.5rem" }} />
+      )}
 
       <FilterBar
         isSuperAdmin={Boolean(showClientPicker)}
@@ -243,15 +306,11 @@ export default function HomePage() {
         venues={venues}
       />
 
-      {bootLoading && !attendance ? (
-        <p className="font-glora-l" style={{ color: "var(--discover-cloud)", marginBottom: "2rem" }}>
-          {copy.loading}
-        </p>
-      ) : null}
+      {bootLoading ? <DashboardSkeleton /> : null}
 
       {error ? (
         <div className="surface-card" style={{ padding: "1.6rem", marginBottom: "2rem" }}>
-          <p className="font-glora" style={{ color: "var(--discover-terracotta)", marginBottom: "1rem" }}>
+          <p className="status-error font-glora" style={{ marginBottom: "1rem" }}>
             {error}
           </p>
           <button type="button" className="btn-discover" onClick={() => void load()}>
@@ -260,84 +319,66 @@ export default function HomePage() {
         </div>
       ) : null}
 
-      {!error && attendance && sales ? (
-        <div
-          className={refreshing ? "metrics-refreshing" : undefined}
-          style={{ opacity: refreshing ? 0.72 : 1, transition: "opacity 120ms ease" }}
-        >
+      {!error && !bootLoading && attendance && sales ? (
+        <div style={{ opacity: refreshing ? 0.72 : 1, transition: "opacity 160ms ease" }}>
           <section
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 168px), 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
               gap: "1rem",
-              marginBottom: "2.25rem",
+              marginBottom: "1.5rem",
             }}
           >
-            <KpiCard label={copy.dashboard.kpis.attendance} value={formatCount(tickets)} hint={scopeLabel} />
-            <KpiCard label={copy.dashboard.kpis.orders} value={formatCount(orders)} hint={scopeLabel} />
             <KpiCard label={copy.dashboard.kpis.revenue} value={formatMoney(revenue)} hint={scopeLabel} />
             <KpiCard
-              label={copy.dashboard.kpis.women}
-              value={pct(genderMeasure?.points.find((p) => p.gender === "woman")?.share)}
+              label={copy.dashboard.kpis.attendance}
+              value={formatCount(tickets)}
               hint={scopeLabel}
             />
-            <KpiCard
-              label={copy.dashboard.kpis.men}
-              value={pct(genderMeasure?.points.find((p) => p.gender === "man")?.share)}
-              hint={scopeLabel}
-            />
+            <KpiCard label={copy.dashboard.kpis.orders} value={formatCount(orders)} hint={scopeLabel} />
           </section>
 
           {bench ? (
-            <section className="surface-card" style={{ padding: "1.6rem 1.4rem", marginBottom: "1.75rem" }}>
+            <section className="surface-card" style={{ padding: "1.5rem 1.4rem", marginBottom: "1.5rem" }}>
               <h2
-                className="font-blogh"
-                style={{ color: "var(--discover-pearl)", fontSize: "0.88rem", margin: "0 0 0.55rem" }}
+                className="font-glora"
+                style={{
+                  color: "var(--color-ink)",
+                  fontSize: "var(--step-lead)",
+                  fontWeight: 400,
+                  letterSpacing: "-0.02em",
+                  margin: "0 0 0.4rem",
+                }}
               >
                 {copy.dashboard.sector.title}
               </h2>
               <p
-                className="font-glora-xl"
-                style={{ color: "var(--discover-cloud)", margin: "0 0 1.35rem", fontSize: "0.85rem", lineHeight: 1.5 }}
+                className="font-glora"
+                style={{
+                  color: "var(--color-muted)",
+                  margin: "0 0 1.2rem",
+                  fontSize: "var(--step-small)",
+                  lineHeight: 1.5,
+                }}
               >
                 {copy.dashboard.sector.note}
               </p>
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 148px), 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
                   gap: "1rem",
                 }}
               >
                 <KpiCard
-                  label={copy.dashboard.sector.avgAttendance}
-                  value={fmtNum(bench.avg_tickets_per_venue_night)}
-                  hint={copy.dashboard.sector.hint}
+                  label={copy.dashboard.sector.attendance}
+                  value={fmtNum(avgAttendance ?? bench.avg_tickets_per_venue_night)}
+                  hint={`${copy.dashboard.sector.hint}: ${fmtNum(bench.avg_tickets_per_venue_night)}`}
                 />
                 <KpiCard
-                  label={copy.dashboard.sector.medianAttendance}
-                  value={fmtNum(bench.median_tickets_per_venue_night)}
-                  hint={copy.dashboard.sector.hint}
-                />
-                <KpiCard
-                  label={copy.dashboard.sector.avgOrders}
-                  value={fmtNum(bench.avg_orders_per_venue_night)}
-                  hint={copy.dashboard.sector.hint}
-                />
-                <KpiCard
-                  label={copy.dashboard.sector.sample}
-                  value={formatCount(bench.accounts_in_sample)}
-                  hint={copy.dashboard.sector.nightsHint(bench.nights_in_sample)}
-                />
-                <KpiCard
-                  label={copy.dashboard.sector.women}
-                  value={pct(bench.share_woman)}
-                  hint={copy.dashboard.sector.hint}
-                />
-                <KpiCard
-                  label={copy.dashboard.sector.men}
-                  value={pct(bench.share_man)}
-                  hint={copy.dashboard.sector.hint}
+                  label={copy.dashboard.sector.orders}
+                  value={fmtNum(avgOrders ?? bench.avg_orders_per_venue_night)}
+                  hint={`${copy.dashboard.sector.hint}: ${fmtNum(bench.avg_orders_per_venue_night)}`}
                 />
               </div>
             </section>
@@ -355,15 +396,6 @@ export default function HomePage() {
             />
           ) : (
             <>
-              {genderMeasure && genderMeasure.points.length > 0 ? (
-                <ChartBlock title={copy.charts.gender.title} definition={copy.charts.gender.definition}>
-                  <GenderMixChart
-                    points={genderMeasure.points}
-                    activeGender={gender}
-                    onToggleGender={onToggleGender}
-                  />
-                </ChartBlock>
-              ) : null}
               {attendancePivot ? (
                 <ChartBlock title={copy.charts.attendance.title} definition={copy.charts.attendance.definition}>
                   <NightlyAttendanceChart
@@ -387,11 +419,11 @@ export default function HomePage() {
                 >
                   {gender ? (
                     <p
-                      className="font-glora-xl"
+                      className="font-glora"
                       style={{
-                        color: "var(--discover-cloud)",
+                        color: "var(--color-muted)",
                         margin: "0 0 1rem",
-                        fontSize: "0.85rem",
+                        fontSize: "var(--step-small)",
                         lineHeight: 1.5,
                       }}
                     >
@@ -408,6 +440,15 @@ export default function HomePage() {
                   />
                 </ChartBlock>
               ) : null}
+              {genderMeasure && genderMeasure.points.length > 0 ? (
+                <ChartBlock title={copy.charts.gender.title} definition={copy.charts.gender.definition}>
+                  <GenderMixChart
+                    points={genderMeasure.points}
+                    activeGender={gender}
+                    onToggleGender={onToggleGender}
+                  />
+                </ChartBlock>
+              ) : null}
             </>
           )}
         </div>
@@ -419,67 +460,4 @@ export default function HomePage() {
 function fmtNum(n: number | null | undefined): string {
   if (n == null) return "—";
   return n.toLocaleString("es-CO", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-}
-
-function pct(n: number | null | undefined): string {
-  if (n == null) return "—";
-  return `${(n * 100).toFixed(0)}%`;
-}
-
-function KpiCard({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <article className="surface-card" style={{ padding: "1.3rem 1.15rem", minWidth: 0 }}>
-      <div className="kpi-label" style={{ marginBottom: "0.7rem" }}>
-        {label}
-      </div>
-      <div
-        className="kpi-number"
-        title={value}
-        style={{ fontSize: value.length > 10 ? "1.2rem" : "clamp(1.45rem, 3.5vw, 1.95rem)" }}
-      >
-        {value}
-      </div>
-      <div
-        className="font-glora-xl"
-        style={{
-          marginTop: "0.55rem",
-          fontSize: "0.75rem",
-          color: "var(--discover-cloud)",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {hint}
-      </div>
-    </article>
-  );
-}
-
-function ChartBlock({
-  title,
-  definition,
-  children,
-}: {
-  title: string;
-  definition: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="surface-card" style={{ padding: "1.6rem 1.4rem", marginBottom: "1.75rem" }}>
-      <h2
-        className="font-blogh"
-        style={{ color: "var(--discover-pearl)", fontSize: "0.88rem", margin: "0 0 0.55rem" }}
-      >
-        {title}
-      </h2>
-      <p
-        className="font-glora-xl"
-        style={{ color: "var(--discover-cloud)", margin: "0 0 1.35rem", fontSize: "0.85rem", lineHeight: 1.5 }}
-      >
-        {definition}
-      </p>
-      {children}
-    </section>
-  );
 }

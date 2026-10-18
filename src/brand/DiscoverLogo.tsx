@@ -10,18 +10,9 @@ export type LogoVariant =
 type LogoProps = {
   variant?: LogoVariant;
   className?: string;
-  /** Champagne wordmark; default is pearl on dark */
   inverted?: boolean;
 };
 
-/**
- * Logo usage for Analytics (more reserved than consumer Discover):
- * A primary  — wordmark + Analytics (login, empty)
- * B secondary — wordmark only (header)
- * C compact  — tighter lockup
- * D stacked  — non-horizontal
- * E mark     — brand seal
- */
 export function DiscoverLogo({
   variant = "secondary",
   className = "",
@@ -35,65 +26,29 @@ export function DiscoverLogo({
       <Image
         src="/brand/logo_2.png"
         alt="DISCOVER Analytics"
-        width={40}
-        height={40}
+        width={32}
+        height={32}
         className={className}
         priority
       />
     );
   }
 
-  if (variant === "stacked") {
-    return (
-      <div className={className} style={{ textAlign: "center" }}>
-        <div className="font-blogh" style={{ color, fontSize: "1.35rem", lineHeight: 1.1 }}>
-          DISCOVER
-        </div>
-        <div
-          className="font-glora-xl"
-          style={{
-            color: tagColor,
-            fontSize: "0.58rem",
-            letterSpacing: "0.22em",
-            marginTop: "0.45rem",
-            textTransform: "uppercase",
-          }}
-        >
-          Analytics
-        </div>
-      </div>
-    );
-  }
-
-  if (variant === "compact") {
-    return (
-      <div className={className} style={{ display: "inline-flex", flexDirection: "column", gap: 4 }}>
-        <span className="font-blogh" style={{ color, fontSize: "1.05rem" }}>
-          DISCOVER
-        </span>
-        <span
-          className="font-glora-xl"
-          style={{ color: tagColor, fontSize: "0.5rem", letterSpacing: "0.2em", textTransform: "uppercase" }}
-        >
-          Analytics
-        </span>
-      </div>
-    );
-  }
-
-  if (variant === "primary") {
+  if (variant === "stacked" || variant === "compact" || variant === "primary") {
+    const size =
+      variant === "primary" ? "clamp(1.55rem, 4vw, 2.1rem)" : variant === "compact" ? "1rem" : "1.25rem";
     return (
       <div className={className}>
-        <div className="font-blogh" style={{ color, fontSize: "clamp(1.7rem, 4.5vw, 2.4rem)" }}>
+        <div className="font-blogh" style={{ color, fontSize: size, lineHeight: 1.1 }}>
           DISCOVER
         </div>
         <div
-          className="font-glora-xl"
+          className="font-glora"
           style={{
             color: tagColor,
-            fontSize: "0.72rem",
-            letterSpacing: "0.28em",
-            marginTop: "0.55rem",
+            fontSize: variant === "primary" ? "0.72rem" : "0.58rem",
+            letterSpacing: "0.18em",
+            marginTop: variant === "primary" ? "0.45rem" : "0.28rem",
             textTransform: "uppercase",
           }}
         >
@@ -104,7 +59,7 @@ export function DiscoverLogo({
   }
 
   return (
-    <span className={`font-blogh ${className}`} style={{ color, fontSize: "1.15rem" }}>
+    <span className={`font-blogh ${className}`} style={{ color, fontSize: "1.05rem" }}>
       DISCOVER
     </span>
   );

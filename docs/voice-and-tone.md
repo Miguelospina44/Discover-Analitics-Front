@@ -31,6 +31,10 @@ Preguntas o sustantivos de negocio:
 Vacío: qué falta, por qué puede faltar, qué hacer.  
 Error: problema + acción. Neutral.
 
+## Panel de ejemplo
+
+Si se muestran datos ficticios, el aviso debe decirlo en una frase: no corresponden a una operación real. Los nombres de establecimientos llevan “(ejemplo)”.
+
 ## Fuente de textos
 
 Todos los strings de interfaz viven en [`src/copy.ts`](../src/copy.ts). No interpolar slang del API: el front muestra los títulos y definiciones de negocio definidos ahí.

@@ -1,5 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
-import { DiscoverLogo } from "./DiscoverLogo";
+import { ChartLine } from "@phosphor-icons/react";
 
 type EmptyStateProps = {
   title: string;
@@ -10,30 +12,29 @@ type EmptyStateProps = {
 export function EmptyState({ title, body, action }: EmptyStateProps) {
   return (
     <div
-      className="surface-card pattern-stamp"
+      className="surface-card"
       style={{
-        padding: "2.75rem 1.85rem",
-        textAlign: "center",
+        padding: "2.75rem 1.75rem",
+        textAlign: "left",
         maxWidth: 560,
-        margin: "0 auto",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.35rem" }}>
-        <DiscoverLogo variant="mark" />
-      </div>
+      <ChartLine size={28} weight="regular" color="var(--color-brand)" aria-hidden />
       <h2
-        className="font-blogh"
+        className="font-glora"
         style={{
-          color: "var(--discover-pearl)",
-          fontSize: "1.05rem",
-          margin: "0 0 0.9rem",
+          color: "var(--color-ink)",
+          fontSize: "var(--step-lead)",
+          fontWeight: 400,
+          letterSpacing: "-0.02em",
+          margin: "1rem 0 0.7rem",
         }}
       >
         {title}
       </h2>
       <p
         className="font-glora-l"
-        style={{ color: "var(--discover-cloud)", margin: "0 0 1.6rem", lineHeight: 1.6 }}
+        style={{ color: "var(--color-muted)", margin: "0 0 1.5rem", lineHeight: 1.6 }}
       >
         {body}
       </p>

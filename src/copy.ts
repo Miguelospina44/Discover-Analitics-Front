@@ -12,7 +12,7 @@ export const copy = {
   },
 
   loading: "Cargando datos…",
-  refreshing: "actualizando datos",
+  refreshing: "Actualizando",
   retry: "Volver a intentar",
 
   nav: {
@@ -22,48 +22,49 @@ export const copy = {
     accountFallback: "cuenta",
   },
 
-  footer: "DISCOVER Analytics — Indicadores para decidir con claridad",
+  footer: "DISCOVER Analytics. Indicadores para decidir con claridad.",
 
   login: {
-    intro: "Acceda a los indicadores de su operación: ingresos, asistencia y rendimiento por noche.",
+    title: "Acceso al panel",
+    intro: "Consulte ingresos, asistencia y rendimiento por noche de su operación.",
     email: "Correo",
     password: "Contraseña",
     submit: "Iniciar sesión",
     submitting: "Verificando acceso…",
-    demoHint: "Accesos de demostración",
+    demoHint: "Cuentas de demostración",
+    preview: "Ver un panel de ejemplo",
+  },
+
+  demo: {
+    banner:
+      "Está viendo datos de ejemplo. No corresponden a una operación real y sirven solo para revisar el panel.",
+    exit: "Salir del ejemplo",
   },
 
   dashboard: {
-    introAdmin:
-      "Vista consolidada de todos los clientes, con referencia anónima del sector para comparar rendimiento.",
+    kicker: "Panel",
+    title: "¿Cómo fue el rendimiento de su operación?",
+    introAdmin: "Vista consolidada de clientes, con una referencia anónima del sector.",
     introOwner: (accountName: string) =>
-      `Panel de ${accountName}. Resultados de su operación frente al promedio anónimo del sector.`,
-    scopeGlobal: "todos los clientes",
-    scopeClient: "cliente",
-    scopeBusiness: "su negocio",
+      `${accountName}. Tres cifras del periodo y la tendencia por noche.`,
+    scopeGlobal: "Todos los clientes",
+    scopeClient: "Cliente",
+    scopeBusiness: "Su negocio",
     kpis: {
-      attendance: "Asistencia registrada",
-      orders: "Órdenes procesadas",
       revenue: "Ingresos",
-      women: "Audiencia femenina",
-      men: "Audiencia masculina",
+      attendance: "Asistencia",
+      orders: "Órdenes",
     },
     sector: {
-      title: "¿Cómo se compara con el sector?",
-      note: "Promedios anónimos de establecimientos comparables. Sirven como referencia de mercado, no como ranking.",
-      avgAttendance: "Promedio de asistencia por noche",
-      medianAttendance: "Mediana de asistencia",
-      avgOrders: "Promedio de órdenes por noche",
-      sample: "Negocios en la muestra",
-      nightsHint: (nights: number) =>
-        nights === 1 ? "1 noche registrada" : `${nights} noches registradas`,
-      women: "Audiencia femenina del sector",
-      men: "Audiencia masculina del sector",
+      title: "Frente al sector",
+      note: "Promedio anónimo de establecimientos comparables. Es una referencia, no un ranking.",
+      attendance: "Asistencia por noche",
+      orders: "Órdenes por noche",
       hint: "promedio del sector",
     },
     empty: {
       title: "Sin datos en este periodo",
-      body: "No hay métricas para el rango seleccionado. Puede deberse a que aún no se sincronizan ventas o a que no hubo actividad. Ajuste el periodo o los filtros e intente de nuevo.",
+      body: "No hay métricas para el rango seleccionado. Puede deberse a que aún no se sincronizan ventas o a que no hubo actividad. Ajuste el periodo o los filtros.",
     },
     salesGenderNote:
       "El recorte por audiencia no aplica a ingresos: esa dimensión no está disponible en ventas.",
@@ -73,7 +74,7 @@ export const copy = {
     period: "Periodo",
     from: "Desde",
     to: "Hasta",
-    clear: "Restablecer filtros",
+    clear: "Quitar filtros",
     client: "Cliente",
     venue: "Establecimiento",
     audience: "Audiencia",
@@ -82,18 +83,15 @@ export const copy = {
   charts: {
     gender: {
       title: "¿Quién conforma su audiencia?",
-      definition:
-        "Composición de la asistencia registrada según género, en el periodo seleccionado.",
+      definition: "Composición de la asistencia registrada según género.",
     },
     attendance: {
       title: "¿Cómo se comportó la asistencia por noche?",
-      definition:
-        "Personas que ingresaron con boletería o cover en cada fecha, por establecimiento.",
+      definition: "Personas que ingresaron con boletería o cover, por fecha y establecimiento.",
     },
     sales: {
       title: "¿Cuánto ingresó cada noche?",
-      definition:
-        "Órdenes e ingresos de boletería y covers vendidos con Discover, por fecha y establecimiento.",
+      definition: "Órdenes de boletería y covers vendidos con Discover, por fecha.",
     },
     people: "Personas",
     venueFallback: (index: number) => `Establecimiento ${index}`,
@@ -107,8 +105,7 @@ export const copy = {
   },
 
   errors: {
-    metrics:
-      "No se pudieron cargar las métricas. Verifique su conexión e intente de nuevo.",
+    metrics: "No se pudieron cargar las métricas. Verifique su conexión e intente de nuevo.",
     apiUnreachable:
       "No se pudo conectar con el servicio. Verifique que esté disponible e intente de nuevo.",
     credentials: "El correo o la contraseña no son correctos.",
@@ -116,6 +113,7 @@ export const copy = {
 
   roles: {
     super_admin: "Administración",
+    account_owner: "Dirección",
   },
 } as const;
 

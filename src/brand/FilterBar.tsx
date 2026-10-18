@@ -13,7 +13,6 @@ type Props = {
   venues: VenueOut[];
 };
 
-/** Avoid focus rectangle / scroll jump on mouse click; keep keyboard focus. */
 function hushMouseFocus(e: MouseEvent<HTMLButtonElement>) {
   e.preventDefault();
 }
@@ -33,19 +32,19 @@ export function FilterBar({ isSuperAdmin, accounts, venues }: Props) {
   } = useFilters();
 
   return (
-    <section className="surface-card filter-bar" style={{ padding: "1.35rem 1.4rem", marginBottom: "1.85rem" }}>
+    <section className="surface-card" style={{ padding: "1.35rem 1.4rem", marginBottom: "1.75rem" }}>
       <div
         style={{
           display: "flex",
           flexWrap: "wrap",
           alignItems: "flex-end",
-          gap: "1rem 1.35rem",
+          gap: "1rem 1.5rem",
           justifyContent: "space-between",
         }}
       >
         <div>
           <span className="scope-picker__label">{copy.filters.period}</span>
-          <div style={{ display: "flex", gap: "0.55rem", flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
             <input
               type="date"
               value={period.start}
@@ -53,9 +52,7 @@ export function FilterBar({ isSuperAdmin, accounts, venues }: Props) {
               className="input-date"
               aria-label={copy.filters.from}
             />
-            <span className="font-glora-xl" style={{ color: "var(--discover-cloud)" }}>
-              →
-            </span>
+            <span style={{ color: "var(--color-muted)" }}>→</span>
             <input
               type="date"
               value={period.end}
