@@ -98,7 +98,7 @@ export const DEMO_LOGINS = [
     password: "change-me-now",
   },
   {
-    label: "Miguel's Club",
+    label: "Club de Miguel",
     email: "miguel@miguelsclub.example.com",
     password: "change-me-now",
   },

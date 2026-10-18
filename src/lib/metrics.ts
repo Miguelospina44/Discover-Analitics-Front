@@ -12,14 +12,17 @@ export function sumRevenueCents(points: SalesPoint[]): number {
   return points.reduce((acc, p) => acc + p.revenue_cents, 0);
 }
 
-/** Compact COP for KPI cards (avoids overflow on glass tiles). */
-export function formatMoney(cents: number): string {
-  return new Intl.NumberFormat("es-CO", {
-    style: "currency",
-    currency: "COP",
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(cents);
+/**
+ * Explicit Colombian pesos for KPIs.
+ *
+ * Backend field is `revenue_cents`. Until the API contract confirms the unit,
+ * values are shown as whole COP (no ÷ 100). Demo fixtures sum to 45.830.000.
+ */
+export function formatMoney(amount: number): string {
+  const grouped = new Intl.NumberFormat("es-CO", {
+    maximumFractionDigits: 0,
+  }).format(amount);
+  return `${grouped} COP`;
 }
 
 export function formatCount(n: number): string {

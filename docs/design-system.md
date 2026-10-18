@@ -2,6 +2,8 @@
 
 Tema **oscuro ejecutivo** para un producto de datos: canvas grafito, superficies planas y un acento champagne contenido. Usuarios = dueños y líderes. Menos ruido que Discover consumidor.
 
+Implementación: Tailwind v4 + shadcn/ui restilado a estos tokens (`src/components/ui`, `DESIGN.md`). El login no lleva header de producto. Cifras de ingresos: `es-CO` + sufijo `COP`, sin notación compacta.
+
 Criterio visual: skill `design-taste-frontend` (Leonxlnx/taste-skill, commit `f624f37a8c650b9cc550253104925efe4c8de246`), adaptada a un panel (no a una landing). Diales: variación baja, movimiento sutil, densidad media. Sin fotos decorativas, sin emojis, un solo set de íconos (Phosphor, peso regular).
 
 ## Color

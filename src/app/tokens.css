@@ -1,5 +1,8 @@
-/* Discover Analytics — executive dark product tokens
-   Graphite canvas, pearl ink, champagne accent. Flat surfaces. WCAG AA. */
+/* Discover Analytics — executive dark tokens
+   Graphite canvas, pearl ink, champagne accent. Mapped onto shadcn roles.
+   Legacy consumer aliases (--discover-yellow, --tomato, --paper, --mist, …) are gone.
+   shadcn --muted / --accent are inset surfaces (slate). Champagne is --primary
+   and --color-brand. Secondary text is --muted-foreground (cloud), not --muted. */
 
 @font-face {
   font-family: "Blogh";
@@ -48,45 +51,55 @@
   --discover-terracotta: #c67b6b;
   --discover-mauve: #9b869b;
 
-  /* Legacy aliases still referenced by a few components */
-  --discover-obsidian: #0f1419;
-  --discover-paper: #1e232c;
-  --discover-mist: #161a20;
-  --discover-line: #2a303a;
-  --discover-line-strong: #6d7484;
-  --discover-storm: #b4bbc8;
-  --discover-ink: #e8eaf0;
-  --discover-ink-soft: #b4bbc8;
-  --discover-yellow: #c9a86d;
-  --discover-ultraviolet: #6b8cae;
-  --discover-tomato: #c67b6b;
-  --discover-cornflower: #7fa885;
-  --discover-plum: #9b869b;
-  --discover-white1: #b4bbc8;
-  --discover-midnight: #1e232c;
-  --discover-charcoal: #2a303a;
-  --discover-purple-slate: #6d7484;
+  --bg: var(--discover-graphite);
+  --bg-deep: var(--discover-night);
+  --surface: var(--discover-steel);
+  --surface-2: var(--discover-slate);
+  --ink: var(--discover-pearl);
+  --accent-ink: var(--discover-night);
+  --up: var(--discover-sage);
+  --down: var(--discover-terracotta);
 
-  --color-bg: var(--discover-graphite);
-  --color-bg-elevated: var(--discover-steel);
-  --color-surface: var(--discover-steel);
-  --color-surface-alt: var(--discover-slate);
-  --color-ink: var(--discover-pearl);
+  --color-bg: var(--bg);
+  --color-bg-elevated: var(--surface);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-2);
+  --color-ink: var(--ink);
   --color-muted: var(--discover-cloud);
-  --color-muted-bright: var(--discover-pearl);
+  --color-muted-bright: var(--ink);
   --color-line: var(--discover-slate);
   --color-line-strong: var(--discover-fog);
   --color-brand: var(--discover-champagne);
   --color-cta: var(--discover-champagne);
-  --color-cta-ink: var(--discover-night);
-  --color-up: var(--discover-sage);
-  --color-down: var(--discover-terracotta);
+  --color-cta-ink: var(--accent-ink);
+  --color-up: var(--up);
+  --color-down: var(--down);
   --color-focus: var(--discover-champagne);
 
+  --background: var(--bg);
+  --foreground: var(--ink);
+  --card: var(--surface);
+  --card-foreground: var(--ink);
+  --popover: var(--surface);
+  --popover-foreground: var(--ink);
+  --primary: var(--discover-champagne);
+  --primary-hover: #d4b57c;
+  --primary-foreground: var(--accent-ink);
+  --secondary: var(--surface-2);
+  --secondary-foreground: var(--ink);
+  --muted: var(--surface-2);
+  --muted-foreground: var(--discover-cloud);
+  --accent: var(--surface-2);
+  --accent-foreground: var(--ink);
+  --destructive: var(--down);
+  --border: transparent;
+  --input: var(--bg-deep);
+  --ring: var(--discover-champagne);
   --chart-1: #c9a86d;
   --chart-2: #6b8cae;
   --chart-3: #7fa885;
   --chart-4: #9b869b;
+  --chart-5: #c67b6b;
   --chart-alert: #c67b6b;
   --chart-grid: rgba(232, 234, 240, 0.06);
 
@@ -94,17 +107,17 @@
   --font-ui: "Glora", Candara, Calibri, "Trebuchet MS", sans-serif;
 
   --step-small: 0.8125rem;
-  --step-body: 1.0625rem;
+  --step-body: 1rem;
   --step-lead: 1.25rem;
-  --step-head: 1.5rem;
-  --step-kpi: clamp(1.75rem, 2.4vw, 2.35rem);
+  --step-head: 1.75rem;
+  --step-kpi: 2.5rem;
 
-  --radius-control: 0.4rem;
+  --radius: 0.5rem;
+  --radius-control: 0.5rem;
   --radius-card: 0.5rem;
-  --radius-pill: 999px;
 
   --space-page: clamp(1.25rem, 3vw, 2.5rem);
-  --space-section: clamp(2rem, 4vw, 3.25rem);
+  --space-section: 2.5rem;
   --max-page: 1080px;
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -112,6 +125,10 @@
   --dur-mid: 220ms;
 
   --shadow-float: 0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+.dark {
+  color-scheme: dark;
 }
 
 * {
@@ -126,8 +143,8 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  background: var(--color-bg);
-  color: var(--color-ink);
+  background: var(--background);
+  color: var(--foreground);
   font-family: var(--font-ui);
   font-weight: 300;
   font-size: 16px;
@@ -136,16 +153,16 @@ body {
 }
 
 a {
-  color: var(--color-ink);
+  color: var(--foreground);
   text-decoration: none;
 }
 
 a:hover {
-  color: var(--color-brand);
+  color: var(--discover-champagne);
 }
 
 :focus-visible {
-  outline: 2px solid var(--color-focus);
+  outline: 2px solid var(--ring);
   outline-offset: 3px;
 }
 
@@ -182,16 +199,16 @@ a:hover {
 
 .page-kicker {
   margin: 0 0 0.65rem;
-  color: var(--color-muted);
+  color: var(--muted-foreground);
   font-size: var(--step-small);
   font-weight: 400;
 }
 
 .page-title {
   margin: 0;
-  color: var(--color-ink);
+  color: var(--foreground);
   font-family: var(--font-ui);
-  font-size: clamp(1.65rem, 3vw, 2.15rem);
+  font-size: var(--step-head);
   font-weight: 400;
   letter-spacing: -0.02em;
   line-height: 1.2;
@@ -201,7 +218,7 @@ a:hover {
 .page-lead {
   margin: 0.85rem 0 0;
   max-width: 38rem;
-  color: var(--color-muted);
+  color: var(--muted-foreground);
   font-size: var(--step-body);
   line-height: 1.55;
 }
@@ -211,7 +228,7 @@ a:hover {
   flex-wrap: wrap;
   gap: 0.4rem 1rem;
   margin-top: 1.1rem;
-  color: var(--color-muted);
+  color: var(--muted-foreground);
   font-size: var(--step-small);
 }
 
@@ -223,7 +240,7 @@ a:hover {
   gap: 0.45rem;
   min-height: 2.75rem;
   padding: 0.65rem 1.15rem;
-  border-radius: var(--radius-control);
+  border-radius: var(--radius);
   font-family: var(--font-ui);
   font-size: 0.95rem;
   font-weight: 400;
@@ -234,13 +251,12 @@ a:hover {
 
 .btn-discover {
   border: 0;
-  background: var(--color-cta);
-  color: var(--color-cta-ink);
+  background: var(--primary);
+  color: var(--primary-foreground);
 }
 
 .btn-discover:hover:not(:disabled) {
   background: #d4b57c;
-  text-decoration: none;
 }
 
 .btn-discover:active:not(:disabled) {
@@ -249,8 +265,8 @@ a:hover {
 
 .btn-quiet {
   border: 0;
-  background: var(--color-surface-alt);
-  color: var(--color-ink);
+  background: var(--secondary);
+  color: var(--secondary-foreground);
 }
 
 .btn-quiet:hover:not(:disabled) {
@@ -267,9 +283,9 @@ a:hover {
 .input-date {
   appearance: none;
   border: 0;
-  border-radius: var(--radius-control);
-  background: var(--discover-graphite);
-  color: var(--color-ink);
+  border-radius: var(--radius);
+  background: var(--input);
+  color: var(--foreground);
   font-family: var(--font-ui);
   font-size: 0.95rem;
   font-weight: 400;
@@ -287,7 +303,7 @@ a:hover {
 
 .input-field:focus,
 .input-date:focus {
-  outline: 2px solid var(--color-focus);
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
@@ -299,7 +315,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .field-label {
   display: block;
   margin-bottom: 0.4rem;
-  color: var(--color-muted);
+  color: var(--muted-foreground);
   font-size: var(--step-small);
   font-weight: 400;
 }
@@ -311,7 +327,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .scope-picker__label {
   display: block;
   margin-bottom: 0.45rem;
-  color: var(--color-muted);
+  color: var(--muted-foreground);
   font-size: var(--step-small);
   font-weight: 400;
 }
@@ -327,9 +343,9 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   min-height: 2.25rem;
   padding: 0.4rem 0.85rem;
   border: 0;
-  border-radius: var(--radius-control);
-  background: var(--discover-graphite);
-  color: var(--color-muted);
+  border-radius: var(--radius);
+  background: var(--bg-deep);
+  color: var(--muted-foreground);
   font-family: var(--font-ui);
   font-size: 0.85rem;
   font-weight: 400;
@@ -338,16 +354,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .scope-chip:hover {
-  color: var(--color-ink);
+  color: var(--foreground);
 }
 
 .scope-chip--active {
-  background: var(--color-surface-alt);
-  color: var(--color-ink);
+  background: var(--secondary);
+  color: var(--foreground);
 }
 
 .scope-chip:focus-visible {
-  outline: 2px solid var(--discover-champagne);
+  outline: 2px solid var(--ring);
   outline-offset: 2px;
 }
 
@@ -370,10 +386,10 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .recharts-default-tooltip {
-  background: var(--discover-steel) !important;
+  background: var(--surface) !important;
   border: 0 !important;
-  border-radius: var(--radius-control) !important;
-  color: var(--discover-pearl) !important;
+  border-radius: var(--radius) !important;
+  color: var(--foreground) !important;
   box-shadow: var(--shadow-float);
 }
 
@@ -382,15 +398,15 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .surface-card {
-  background: var(--color-surface);
+  background: var(--card);
   border: 0;
-  border-radius: var(--radius-card);
+  border-radius: var(--radius);
   overflow: hidden;
   min-width: 0;
 }
 
 .shell-header {
-  background: var(--discover-night);
+  background: var(--bg-deep);
 }
 
 .app-backdrop {
@@ -398,7 +414,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: var(--discover-graphite);
+  background: var(--background);
 }
 
 .shell-content {
@@ -410,7 +426,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   font-family: var(--font-ui);
   font-weight: 400;
   letter-spacing: -0.02em;
-  color: var(--color-ink);
+  color: var(--foreground);
   line-height: 1.05;
   max-width: 100%;
   overflow: hidden;
@@ -423,16 +439,16 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .kpi-label {
   font-family: var(--font-ui);
   font-weight: 400;
-  color: var(--color-muted);
+  color: var(--muted-foreground);
   font-size: var(--step-small);
 }
 
 .delta-up {
-  color: var(--color-up);
+  color: var(--up);
 }
 
 .delta-down {
-  color: var(--color-down);
+  color: var(--down);
 }
 
 .banner-demo {
@@ -441,25 +457,25 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   gap: 0.65rem;
   margin-bottom: 1.5rem;
   padding: 0.9rem 1rem;
-  background: var(--color-surface);
-  border-radius: var(--radius-card);
-  color: var(--color-muted);
+  background: var(--card);
+  border-radius: var(--radius);
+  color: var(--muted-foreground);
   font-size: var(--step-small);
   line-height: 1.45;
 }
 
 .banner-demo svg {
   flex-shrink: 0;
-  color: var(--color-brand);
+  color: var(--discover-champagne);
 }
 
 .status-error {
-  color: var(--color-down);
+  color: var(--destructive);
 }
 
 .skeleton {
-  background: var(--color-surface-alt);
-  border-radius: var(--radius-control);
+  background: var(--secondary);
+  border-radius: var(--radius);
 }
 
 .skeleton-pulse {
@@ -477,11 +493,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 }
 
 .shell-account {
-  color: var(--color-muted);
+  color: var(--muted-foreground);
   font-size: var(--step-small);
 }
 
-@media (max-width: 720px) {
+@media (width < 720px) {
   .shell-account {
     display: none;
   }

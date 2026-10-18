@@ -20,6 +20,7 @@ export const copy = {
     signIn: "Iniciar sesión",
     signOut: "Cerrar sesión",
     accountFallback: "cuenta",
+    session: "Sesión",
   },
 
   footer: "DISCOVER Analytics. Indicadores para decidir con claridad.",
@@ -31,7 +32,7 @@ export const copy = {
     password: "Contraseña",
     submit: "Iniciar sesión",
     submitting: "Verificando acceso…",
-    demoHint: "Cuentas de demostración",
+    demoHint: "Cuentas de prueba",
     preview: "Ver un panel de ejemplo",
   },
 

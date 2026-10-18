@@ -1,6 +1,6 @@
 /**
- * Discover chart / viz tokens — premium dark canvas, professional palette.
- * Champagne #C9A86D as primary accent; muted complementary tones for series.
+ * Discover chart / viz tokens — same HEX as `src/app/tokens.css`.
+ * Champagne as primary series; complementary tones for additional venues.
  */
 export const discoverColors = {
   obsidian: "#0F1419",
@@ -10,9 +10,9 @@ export const discoverColors = {
   sage: "#7FA885",
   mauve: "#9B869B",
   night: "#0F1419",
-  graphite: "#1A1D23",
-  steel: "#252932",
-  slate: "#3A3F4B",
+  graphite: "#161A20",
+  steel: "#1E232C",
+  slate: "#2A303A",
   fog: "#6D7484",
   cloud: "#B4BBC8",
   pearl: "#E8EAF0",
@@ -31,10 +31,10 @@ export const chartAlert = discoverColors.terracotta;
 
 export const chartTheme = {
   background: "transparent",
-  grid: "rgba(232, 234, 240, 0.1)",
+  grid: "rgba(232, 234, 240, 0.06)",
   axis: discoverColors.cloud,
-  tooltipBg: "rgba(37, 41, 50, 0.96)",
-  tooltipBorder: discoverColors.slate,
+  tooltipBg: discoverColors.steel,
+  tooltipBorder: "transparent",
   tooltipText: discoverColors.pearl,
   series: [...chartSeries],
   alert: chartAlert,
@@ -43,12 +43,12 @@ export const chartTheme = {
 } as const;
 
 export const chartTooltipStyle = {
-  borderRadius: 10,
-  border: `1px solid ${chartTheme.tooltipBorder}`,
+  borderRadius: 8,
+  border: "0",
   background: chartTheme.tooltipBg,
   color: chartTheme.tooltipText,
   fontSize: 12,
-  boxShadow: "0 10px 28px rgba(0, 0, 0, 0.35)",
+  boxShadow: "0 16px 40px rgba(0, 0, 0, 0.35)",
 } as const;
 
 export const genderSeriesColors: Record<string, string> = {

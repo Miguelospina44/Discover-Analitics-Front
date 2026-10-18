@@ -4,7 +4,7 @@ import { AppShell } from "@/brand/AppShell";
 import { copy } from "@/copy";
 import { AuthProvider } from "@/lib/auth";
 import { FilterProvider } from "@/lib/filters";
-import "./tokens.css";
+import "./globals.css";
 
 export const metadata: Metadata = {
   title: copy.meta.title,
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="es">
+    <html lang="es" className="dark">
       <body>
         <AuthProvider>
           <FilterProvider>

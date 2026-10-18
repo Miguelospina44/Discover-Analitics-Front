@@ -1,24 +1,37 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { WarningCircle } from "@phosphor-icons/react";
 import { DiscoverLogo } from "@/brand/DiscoverLogo";
-import { DashboardSkeleton } from "@/brand/Skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { copy } from "@/copy";
 import { useAuth } from "@/lib/auth";
 import { ApiError, DEMO_LOGINS } from "@/lib/types";
 
+const showTrialAccounts = process.env.NODE_ENV !== "production";
+
 export default function LoginPage() {
   const { token, ready, isDemo, login, enterDemo } = useAuth();
   const router = useRouter();
-  const [email, setEmail] = useState<string>(DEMO_LOGINS[0].email);
-  const [password, setPassword] = useState<string>(DEMO_LOGINS[0].password);
+  const emailRef = useRef<HTMLInputElement>(null);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
   useEffect(() => {
     if (ready && (token || isDemo)) router.replace("/");
   }, [ready, token, isDemo, router]);
+
+  useEffect(() => {
+    if (error) emailRef.current?.focus();
+  }, [error]);
 
   async function onSubmit(e: FormEvent) {
     e.preventDefault();
@@ -37,100 +50,102 @@ export default function LoginPage() {
 
   if (!ready || token || isDemo) {
     return (
-      <main className="page-wrap">
+      <main className="flex min-h-dvh items-center justify-center px-[var(--space-page)]">
         <p className="page-kicker">{copy.loading}</p>
-        <DashboardSkeleton />
       </main>
     );
   }
 
+  const selectedTrial = DEMO_LOGINS.find((demo) => demo.email === email)?.email ?? "";
+
   return (
-    <main
-      style={{
-        minHeight: "70dvh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "var(--space-page)",
-      }}
-    >
-      <form
-        onSubmit={onSubmit}
-        className="surface-card"
-        style={{ width: "100%", maxWidth: 420, padding: "2.25rem 1.75rem" }}
-      >
-        <div style={{ marginBottom: "1.35rem" }}>
-          <DiscoverLogo variant="primary" />
+    <main className="flex min-h-dvh items-center justify-center px-[var(--space-page)] py-12">
+      <Card className="w-full max-w-[26.25rem] px-7 py-9">
+        <DiscoverLogo variant="primary" />
+        <div>
+          <h1 className="page-title text-[1.65rem]">{copy.login.title}</h1>
+          <p className="page-lead">{copy.login.intro}</p>
         </div>
-        <h1 className="page-title" style={{ fontSize: "1.65rem" }}>
-          {copy.login.title}
-        </h1>
-        <p className="page-lead" style={{ marginBottom: "1.5rem" }}>
-          {copy.login.intro}
-        </p>
-        <p className="field-label">{copy.login.demoHint}</p>
-        <div style={{ display: "flex", gap: "0.4rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
-          {DEMO_LOGINS.map((demo) => (
-            <button
-              key={demo.email}
+        <form onSubmit={onSubmit} className="flex flex-col gap-6">
+          <FieldGroup className="gap-5">
+            {showTrialAccounts ? (
+              <Field>
+                <FieldLabel>{copy.login.demoHint}</FieldLabel>
+                <ToggleGroup
+                  type="single"
+                  value={selectedTrial}
+                  onValueChange={(value) => {
+                    const demo = DEMO_LOGINS.find((item) => item.email === value);
+                    if (!demo) return;
+                    setEmail(demo.email);
+                    setPassword(demo.password);
+                    setError(null);
+                  }}
+                  spacing={2}
+                  size="sm"
+                  aria-label={copy.login.demoHint}
+                >
+                  {DEMO_LOGINS.map((demo) => (
+                    <ToggleGroupItem key={demo.email} value={demo.email}>
+                      {demo.label}
+                    </ToggleGroupItem>
+                  ))}
+                </ToggleGroup>
+              </Field>
+            ) : null}
+            <Field>
+              <FieldLabel htmlFor="login-email">{copy.login.email}</FieldLabel>
+              <Input
+                ref={emailRef}
+                id="login-email"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                aria-invalid={Boolean(error)}
+                disabled={pending}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor="login-password">{copy.login.password}</FieldLabel>
+              <Input
+                id="login-password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+                aria-invalid={Boolean(error)}
+                disabled={pending}
+              />
+            </Field>
+          </FieldGroup>
+          {error ? (
+            <Alert variant="destructive">
+              <WarningCircle size={16} weight="regular" aria-hidden />
+              <AlertDescription className="text-destructive">{error}</AlertDescription>
+            </Alert>
+          ) : null}
+          <div className="flex flex-col gap-2.5">
+            <Button type="submit" className="w-full" disabled={pending}>
+              {pending ? copy.login.submitting : copy.login.submit}
+            </Button>
+            <Button
               type="button"
+              variant="secondary"
+              className="w-full"
+              disabled={pending}
               onClick={() => {
-                setEmail(demo.email);
-                setPassword(demo.password);
-                setError(null);
+                enterDemo();
+                router.replace("/");
               }}
-              className={`scope-chip${email === demo.email ? " scope-chip--active" : ""}`}
             >
-              {demo.label}
-            </button>
-          ))}
-        </div>
-        <label className="field-label" htmlFor="login-email">
-          {copy.login.email}
-        </label>
-        <input
-          id="login-email"
-          type="email"
-          autoComplete="username"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-          className="input-field"
-          style={{ marginBottom: "1rem" }}
-        />
-        <label className="field-label" htmlFor="login-password">
-          {copy.login.password}
-        </label>
-        <input
-          id="login-password"
-          type="password"
-          autoComplete="current-password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-          className="input-field"
-          style={{ marginBottom: "1.25rem" }}
-        />
-        {error ? (
-          <p className="status-error font-glora" style={{ marginBottom: "1rem" }} role="alert">
-            {error}
-          </p>
-        ) : null}
-        <button type="submit" className="btn-discover" style={{ width: "100%" }} disabled={pending}>
-          {pending ? copy.login.submitting : copy.login.submit}
-        </button>
-        <button
-          type="button"
-          className="btn-quiet"
-          style={{ width: "100%", marginTop: "0.65rem" }}
-          onClick={() => {
-            enterDemo();
-            router.replace("/");
-          }}
-        >
-          {copy.login.preview}
-        </button>
-      </form>
+              {copy.login.preview}
+            </Button>
+          </div>
+        </form>
+      </Card>
     </main>
   );
 }

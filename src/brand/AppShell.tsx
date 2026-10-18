@@ -4,89 +4,67 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { SignOut } from "@phosphor-icons/react";
-import { DiscoverLogo } from "./DiscoverLogo";
+import { Button } from "@/components/ui/button";
 import { copy, roleLabel } from "@/copy";
 import { useAuth } from "@/lib/auth";
+import { DiscoverLogo } from "./DiscoverLogo";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { token, me, ready, isDemo, logout } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
   const signedIn = Boolean((ready && token) || isDemo);
+  const isAccessScreen = pathname === "/login";
+
+  if (isAccessScreen) {
+    return (
+      <div className="relative min-h-dvh bg-[var(--bg-deep)]">
+        <div className="shell-content">{children}</div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ minHeight: "100dvh", background: "var(--color-bg)" }}>
+    <div className="relative min-h-dvh bg-background">
       <div className="app-backdrop" aria-hidden />
       <div className="shell-content">
-        <header
-          className="shell-header"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "1rem",
-            padding: "0.9rem var(--space-page)",
-            position: "sticky",
-            top: 0,
-            zIndex: 20,
-          }}
-        >
-          <Link href="/" style={{ textDecoration: "none", color: "inherit" }}>
+        <header className="shell-header sticky top-0 z-20 flex items-center justify-between gap-4 px-[var(--space-page)] py-[0.9rem]">
+          <Link href="/" className="text-inherit no-underline">
             <DiscoverLogo variant="compact" />
           </Link>
           <nav
-            className="font-glora"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1.15rem",
-              fontSize: "0.9rem",
-              flexWrap: "wrap",
-              justifyContent: "flex-end",
-            }}
+            className="font-glora flex flex-wrap items-center justify-end gap-3 text-[0.9rem]"
+            aria-label={copy.nav.session}
           >
             {ready && me ? (
               <span className="shell-account">
-                {me.account_name ?? copy.nav.accountFallback} · {roleLabel(me.role)}
+                {me.account_name ?? copy.nav.accountFallback}
+                {" · "}
+                {roleLabel(me.role)}
               </span>
             ) : null}
-            <Link
-              href="/"
-              style={{
-                color: pathname === "/" ? "var(--color-ink)" : "var(--color-muted)",
-              }}
-            >
-              {copy.nav.panel}
-            </Link>
             {signedIn ? (
-              <button
+              <Button
                 type="button"
-                className="btn-quiet"
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   logout();
                   router.replace("/login");
                 }}
-                style={{ minHeight: "2.25rem", padding: "0.35rem 0.7rem" }}
               >
                 <SignOut size={16} weight="regular" aria-hidden />
                 {copy.nav.signOut}
-              </button>
+              </Button>
             ) : (
-              <Link href="/login" style={{ color: "var(--color-muted)" }}>
+              <Link href="/login" className="text-muted-foreground">
                 {copy.nav.signIn}
               </Link>
             )}
           </nav>
         </header>
         {children}
-        <footer
-          className="font-glora"
-          style={{
-            padding: "2.5rem var(--space-page)",
-            color: "var(--color-muted)",
-            fontSize: "var(--step-small)",
-          }}
-        >
+        <footer className="font-glora px-[var(--space-page)] py-10 text-[length:var(--step-small)] text-muted-foreground">
           {copy.footer}
         </footer>
       </div>

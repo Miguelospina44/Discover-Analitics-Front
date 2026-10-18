@@ -1,6 +1,6 @@
 # Plan de reforma visual — DISCOVER Analytics
 
-**Estado:** pendiente de aprobación de Miguel. No implementar hasta que este documento se apruebe o se anote.
+**Estado:** aprobado por Miguel (2026-10-18). Pregunta 1: **Tailwind v4 + shadcn restilado**. Fases 1–2 implementadas en este PR. Fases 3–5 **no arrancan** hasta el siguiente aviso.
 
 **Producto:** panel de indicadores para dueños y líderes de bares, discotecas y locales. Next.js 15, React 19, Recharts 3, tokens CSS propios, copy en `src/copy.ts`. Puerto 3001.
 
@@ -17,7 +17,7 @@
 | **Taste Skill** (`design-taste-frontend`, commit `f624f37a8c650b9cc550253104925efe4c8de246`) | Sí, instalada y leída | House rules adaptadas a panel: sin vidrio, sin emojis, acento escaso, tipos pocos, copy de pregunta. **No** se aplica el inspector de landings (fotos, 8 motions, headlines de 2 líneas). |
 | **frontend-design** (Anthropics) | Sí, SKILL leída | Identidad anclada al negocio nocturno ejecutivo; lista de defaults a evitar (eyebrow, dots, cards idénticas, acento en una palabra). |
 | **Impeccable** (`pbakaus/impeccable`) | Parcial | Se aplicaron **Operate**, **audit** (5 dimensiones) y **critique** (especificidad, carga cognitiva, heurísticas) sobre código y capturas ya existentes. **No** se ejecutó el binario `impeccable detect`, ni hooks, ni los dos sub-agentes del comando `/critique`. Esa pasada completa queda para la fase de implementación. |
-| **shadcn/ui** | Parcial (docs públicas) | Catálogo y Chart (Recharts v3) usados para decidir qué adoptar. **No** hay MCP Shadcn en este agente; el repo **no** tiene `components.json` ni Tailwind. |
+| **shadcn/ui** | Instalado en fases 1–2 | `components.json` (new-york, CSS variables), `src/components/ui/*` restilados a Discover. Sin MCP Shadcn. Íconos de producto: Phosphor (Lucide no se importa). |
 | **Superdesign** | Parcial (SKILL + DESIGN.md leídos) | Criterio: un `DESIGN.md` implementable, no “default shadcn”. **No** se pudo abrir el canvas: el CLI exige `superdesign login` y no hay sesión en este entorno. |
 | **Modern Web Guidance** (Chrome) | No instalada | El skill file no está en el workspace ni en plugins del agente. Se aplicó criterio de plataforma web actual **por conocimiento** (ver §7) y se marca como no ejecutada de fuente. |
 | **Refero** | MCP presente, **sin suscripción** | `NO_SUBSCRIPTION`. No hay pantallas ni estilos reales. |
@@ -168,7 +168,7 @@ Proporción Taste: ground 70–90 %, ink en texto, **acento &lt; 5 %** de cada p
 - **ZT Glora Pro:** toda la UI. Pesos 300 cuerpo, 400 controles y cifras.
 - Escala **fija en rem** (Impeccable Operate: no clamp en títulos de producto): 13 / 16 / 20 / 28 / 40 para KPI.
 - Frase, no versales, salvo el wordmark.
-- Cifras: `tabular-nums`. Ingresos: notación colombiana explícita (`$ 45,8 mill. COP` o `$ 45.800.000`).
+- Cifras: `tabular-nums`. Ingresos: `45.830.000 COP` (ver §9.4).
 - Medida de lead ≤ 65–75 caracteres.
 
 ### Espaciado, bordes, elevación
@@ -214,11 +214,11 @@ Charts: `src/brand/chart-tokens.ts` lee los mismos roles. Nunca hex suelto en JS
 
 ### 3.2 ¿Tailwind + shadcn?
 
-**Recomendación (pendiente de Miguel, pregunta §9):** adoptar **Tailwind v4 + shadcn/ui** mapeando CSS variables a la paleta Discover, **no** el preset zinc.
+**Decisión (Miguel, 2026-10-18):** **Tailwind v4 + shadcn/ui** restilado a Discover. No preset zinc. No sidebar. Phosphor en producto; Lucide no se importa.
 
-Motivo: Miguel pidió shadcn como base; Chart de shadcn ya usa Recharts v3 (el stack actual); Field / Toggle Group / Empty / Skeleton evitan reinventar estados.
+Fuente: `components.json`, `src/app/globals.css` (`@theme inline`), primitivos en `src/components/ui`. Utilidad `cn` en `src/lib/utils.ts` (no el paquete npm `cn`).
 
-Riesgo: el repo hoy es CSS global + inline. Es un corte de stack, no un barniz. Alternativa si se rechaza Tailwind: primitivos propios con la **misma API conceptual** (Button, Field, Card, ToggleGroup, ChartContainer) sin Tailwind.
+El dashboard (fase 3+) sigue en clases CSS de `tokens.css` hasta que se migre. `--color-muted` en esa hoja sigue siendo cloud (texto); el `bg-muted` de Tailwind apunta a `--muted` = slate.
 
 ### 3.3 Adoptar de shadcn (restilados, Phosphor)
 
@@ -433,21 +433,30 @@ Ninguna fase arranca sin aprobación de este plan y de las preguntas §9 que blo
 
 ---
 
-## 9. Preguntas abiertas para Miguel
+## 9. Preguntas — decisiones (2026-10-18)
 
-Las que bloquean implementación van primero.
+Miguel cerró la pregunta 1. El resto se decide aquí con criterio de panel ejecutivo; se puede revertir.
 
-1. **¿Tailwind v4 + shadcn/ui restilado a Discover, o primitivos propios sin Tailwind?** Recomendación: shadcn + Phosphor, sin sidebar.
-2. **¿Se mantienen Blogh + Glora** (identidad Discover) **o se abre una sans de producto más “Operate”** (Glora para todo, Blogh solo en wordmark — ya es la línea actual)?
-3. **¿El login debe perder el header de producto** (recomendado) o prefiere continuidad de nav?
-4. **Ingresos: ¿formato completo (`$ 45.800.000 COP`) o compacto (`$ 45,8 mill. COP`)?** El compacto actual se lee como dólar.
-5. **¿La gráfica de ventas debe mostrar ingresos (recomendado) u órdenes?** Hoy el título dice ingresos y la serie es órdenes.
-6. **¿La audiencia (género) es MVP o se pospone?** En móvil el donut es el punto más débil.
-7. **¿El comparativo de sector es MVP?** Si sí, ¿dos cifras (asistencia y órdenes vs promedio) bastan?
-8. **Cuentas de prueba en login:** ¿visibles siempre, solo en no-producción, o se eliminan a favor del panel de ejemplo?
-9. **Refero / Mobbin:** cuando el plan de esas cuentas esté activo, ¿quiere una ronda de anclaje visual *antes* de la fase 1, o se implementa con esta dirección y se corrige con referencias después?
-10. **Superdesign canvas:** ¿debe la siguiente ronda generar drafts en Superdesign (requiere login) o ir directo a código tras aprobar este plan?
-11. **¿Hay más rutas además de login + panel** que deban existir en el MVP y no estén en el repo (recuperar contraseña, 404, selección de local)?
+| # | Pregunta | Decisión | Depende del backend |
+|---|---|---|---|
+| 1 | Tailwind v4 + shadcn restilado vs primitivos | **Tailwind v4 + shadcn restilado.** Phosphor, sin sidebar. | No |
+| 2 | Blogh + Glora | **Se mantienen.** Blogh solo wordmark; Glora UI. | No |
+| 3 | Login sin header de producto | **Sí.** `/login` no pinta header ni footer. El shell del panel: logo, cuenta (desktop), Cerrar sesión. Sin enlace «Panel». | No |
+| 4 | Formato COP | **Completo, explícito:** `45.830.000 COP` (`es-CO`, sin `$` para no leerse como USD, sin compacto). | **Parcial:** el campo se llama `revenue_cents`. Hasta confirmar el contrato, **no se divide entre 100**; los fixtures de ejemplo ya suman pesos enteros. Si el API envía céntimos reales, habrá que ajustar `formatMoney`. |
+| 5 | Serie de ventas = ingresos u órdenes | **Ingresos (`revenue_cents`)**, no `order_count`. El título ya pregunta por ingresos. **Corrección de serie en fase 4** (no en 1–2). | **Sí:** unidad y semántica de `revenue_cents` vs `order_count`. |
+| 6 | Audiencia en el MVP | **Se queda.** En fase 3 se simplifica (no es el gesto hero); en fase 4, barras en móvil si el donut choca. | **Sí:** `attendance-by-gender` y códigos `woman/man/other/undisclosed`. |
+| 7 | Sector en el MVP | **Se queda**, dos cifras (asistencia y órdenes vs promedio). Sin cards anidadas en fase 3. | **Sí:** `GremialBenchmarks`; no hay benchmark de ingresos en el contrato actual. |
+| 8 | Cuentas de prueba en login | **Solo fuera de producción** (`NODE_ENV !== "production"`). En prod queda el CTA «Ver un panel de ejemplo». Campos vacíos al cargar. | No (son fixtures de front; no se leen `.env`) |
+| 9 | Refero / Mobbin antes de fase 1 | **Seguir sin anclaje** (sin suscripción en este entorno). Corregir con referencias cuando existan. | No |
+| 10 | Superdesign canvas | **Ir a código.** El CLI exige login y no hay sesión. `DESIGN.md` cubre la dirección. | No |
+| 11 | Más rutas en el MVP | **No.** Login + panel. Sin recuperar contraseña, 404 propia ni selector de local extra. | Auth de recuperación sería API; fuera de alcance. |
+
+Cifras y series que **siguen al backend** (no inventar en front):
+
+- Unidad de `revenue_cents` (pesos vs céntimos).
+- Presencia de ingresos en el benchmark de sector (hoy no viene).
+- Códigos y cobertura de audiencia.
+- Errores de login 401/400: el mapeo a «correo o contraseña no son correctos» ya vive en `auth.tsx` (no se tocó).
 
 ---
 
@@ -471,6 +480,10 @@ Asistencia por noche                         Ingresos por noche
 
 Móvil: ingresos full width; asistencia y órdenes apilados; una gráfica por vez.
 
-## Apéndice B — Qué no hace este documento
+## Apéndice B — Alcance de este PR (fases 1–2)
 
-No cambia código de producto. No instala Tailwind. No abre canvas Superdesign. No inventa métricas nuevas. No usa credenciales ni `.env`.
+Hecho: Tailwind v4, tokens sin aliases consumidor, shadcn restilado, `DESIGN.md`, login sin chrome de producto, shell mínimo, formato COP, copy de prueba / Club de Miguel.
+
+No hecho (fases 3–5): hero de ingresos, filtros, corrección de la serie de ventas, charts, skip-link, migración del dashboard a primitivos, 404.
+
+No se toca: contrato de API, `src/lib/api.ts`, `src/lib/auth.tsx`, `.env`, credenciales.
