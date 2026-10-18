@@ -9,6 +9,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { copy } from "@/copy";
 import { fetchMe, login as apiLogin } from "./api";
 import { ApiError, type MeResponse } from "./types";
 
@@ -78,7 +79,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMe(profile);
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 400)) {
-        throw new ApiError(err.status, "Ese correo o clave no cuadran.");
+        throw new ApiError(err.status, copy.errors.credentials);
       }
       throw err;
     }

@@ -9,21 +9,9 @@ import {
   Tooltip,
 } from "recharts";
 
+import { chartTheme, chartTooltipStyle, genderSeriesColors } from "@/brand/chart-tokens";
+import { copy, genderLabel } from "@/copy";
 import type { GenderPoint } from "@/lib/types";
-
-const COLORS: Record<string, string> = {
-  woman: "#F3F188",
-  man: "#111111",
-  other: "#9CA3AF",
-  undisclosed: "#D1D5DB",
-};
-
-const LABELS: Record<string, string> = {
-  woman: "Mujer",
-  man: "Hombre",
-  other: "Otro",
-  undisclosed: "No especificado",
-};
 
 type Props = {
   points: GenderPoint[];
@@ -38,14 +26,14 @@ function hushFocus(e: { preventDefault: () => void }) {
 export function GenderMixChart({ points, activeGender, onToggleGender }: Props) {
   const data = points.map((s) => ({
     key: s.gender,
-    name: LABELS[s.gender] ?? s.gender,
+    name: genderLabel(s.gender),
     value: s.headcount,
   }));
 
   return (
     <div
       className="chart-crossfilter"
-      style={{ width: "100%", height: 280 }}
+      style={{ width: "100%", height: 300 }}
       onMouseDown={hushFocus}
     >
       <ResponsiveContainer>
@@ -56,10 +44,10 @@ export function GenderMixChart({ points, activeGender, onToggleGender }: Props) 
             nameKey="name"
             cx="50%"
             cy="50%"
-            innerRadius={58}
-            outerRadius={96}
-            paddingAngle={2}
-            stroke="#fff"
+            innerRadius={62}
+            outerRadius={98}
+            paddingAngle={3}
+            stroke={chartTheme.tooltipBg}
             strokeWidth={2}
             isAnimationActive={false}
             cursor={onToggleGender ? "pointer" : undefined}
@@ -72,32 +60,30 @@ export function GenderMixChart({ points, activeGender, onToggleGender }: Props) 
             }}
           >
             {data.map((entry) => {
-              const base = COLORS[entry.key] ?? "#CBD5E1";
+              const base = genderSeriesColors[entry.key] ?? chartTheme.series[3];
               const dimmed = Boolean(activeGender && activeGender !== entry.key);
               return (
                 <Cell
                   key={entry.key}
                   fill={base}
-                  fillOpacity={dimmed ? 0.35 : 1}
-                  stroke="#fff"
+                  fillOpacity={dimmed ? 0.28 : 1}
+                  stroke={chartTheme.tooltipBg}
                   strokeWidth={2}
                 />
               );
             })}
           </Pie>
           <Tooltip
-            formatter={(value) => [Number(value).toLocaleString("es-CO"), "Personas"]}
-            contentStyle={{
-              borderRadius: 12,
-              border: "1px solid rgba(17,17,17,0.08)",
-              background: "rgba(255,255,255,0.95)",
-            }}
+            formatter={(value) => [Number(value).toLocaleString("es-CO"), copy.charts.people]}
+            contentStyle={chartTooltipStyle}
+            labelStyle={{ color: chartTheme.tooltipText }}
+            itemStyle={{ color: chartTheme.tooltipText }}
           />
           <Legend
             verticalAlign="bottom"
             height={36}
             formatter={(value) => (
-              <span style={{ color: "var(--discover-ink-soft)", fontSize: 12 }}>{value}</span>
+              <span style={{ color: chartTheme.axis, fontSize: 12 }}>{value}</span>
             )}
           />
         </PieChart>

@@ -10,31 +10,31 @@ export type LogoVariant =
 type LogoProps = {
   variant?: LogoVariant;
   className?: string;
-  /** Prefer yellow wordmark on black; inverted only on solid yellow blocks */
+  /** Champagne wordmark; default is pearl on dark */
   inverted?: boolean;
 };
 
 /**
- * Logo usage (brandbook):
- * A primary  — wordmark + tagline (splash, login, PDF cover, big empty)
- * B secondary — wordmark only (header, nav)
- * C compact  — tighter lockup (sidebar, partner)
- * D stacked  — non-horizontal (mobile short header)
- * E mark     — brand seal without wordmark (favicon, loader, export corner)
+ * Logo usage for Analytics (more reserved than consumer Discover):
+ * A primary  — wordmark + Analytics (login, empty)
+ * B secondary — wordmark only (header)
+ * C compact  — tighter lockup
+ * D stacked  — non-horizontal
+ * E mark     — brand seal
  */
 export function DiscoverLogo({
   variant = "secondary",
   className = "",
   inverted = false,
 }: LogoProps) {
-  const color = inverted ? "var(--discover-yellow)" : "var(--discover-obsidian)";
-  const tagColor = inverted ? "var(--discover-obsidian)" : "var(--discover-storm)";
+  const color = inverted ? "var(--discover-champagne)" : "var(--discover-pearl)";
+  const tagColor = inverted ? "var(--discover-night)" : "var(--discover-cloud)";
 
   if (variant === "mark") {
     return (
       <Image
         src="/brand/logo_2.png"
-        alt="DISCOVER"
+        alt="DISCOVER Analytics"
         width={40}
         height={40}
         className={className}
@@ -46,25 +46,20 @@ export function DiscoverLogo({
   if (variant === "stacked") {
     return (
       <div className={className} style={{ textAlign: "center" }}>
-        <div
-          className="font-blogh"
-          style={{ color, fontSize: "1.35rem", lineHeight: 1.1 }}
-        >
+        <div className="font-blogh" style={{ color, fontSize: "1.35rem", lineHeight: 1.1 }}>
           DISCOVER
         </div>
         <div
           className="font-glora-xl"
           style={{
             color: tagColor,
-            fontSize: "0.55rem",
-            letterSpacing: "0.18em",
+            fontSize: "0.58rem",
+            letterSpacing: "0.22em",
             marginTop: "0.45rem",
             textTransform: "uppercase",
           }}
         >
-          4 Friends,
-          <br />
-          By Friends.
+          Analytics
         </div>
       </div>
     );
@@ -73,14 +68,14 @@ export function DiscoverLogo({
   if (variant === "compact") {
     return (
       <div className={className} style={{ display: "inline-flex", flexDirection: "column", gap: 4 }}>
-        <span className="font-blogh" style={{ color, fontSize: "1.1rem" }}>
+        <span className="font-blogh" style={{ color, fontSize: "1.05rem" }}>
           DISCOVER
         </span>
         <span
           className="font-glora-xl"
-          style={{ color: tagColor, fontSize: "0.5rem", letterSpacing: "0.16em" }}
+          style={{ color: tagColor, fontSize: "0.5rem", letterSpacing: "0.2em", textTransform: "uppercase" }}
         >
-          4 FRIENDS, BY FRIENDS.
+          Analytics
         </span>
       </div>
     );
@@ -89,27 +84,27 @@ export function DiscoverLogo({
   if (variant === "primary") {
     return (
       <div className={className}>
-        <div className="font-blogh" style={{ color, fontSize: "clamp(1.8rem, 5vw, 2.6rem)" }}>
+        <div className="font-blogh" style={{ color, fontSize: "clamp(1.7rem, 4.5vw, 2.4rem)" }}>
           DISCOVER
         </div>
         <div
           className="font-glora-xl"
           style={{
             color: tagColor,
-            fontSize: "0.7rem",
-            letterSpacing: "0.22em",
-            marginTop: "0.65rem",
+            fontSize: "0.72rem",
+            letterSpacing: "0.28em",
+            marginTop: "0.55rem",
             textTransform: "uppercase",
           }}
         >
-          4 Friends, By Friends.
+          Analytics
         </div>
       </div>
     );
   }
 
   return (
-    <span className={`font-blogh ${className}`} style={{ color, fontSize: "1.25rem" }}>
+    <span className={`font-blogh ${className}`} style={{ color, fontSize: "1.15rem" }}>
       DISCOVER
     </span>
   );

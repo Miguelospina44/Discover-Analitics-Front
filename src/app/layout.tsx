@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { AppShell } from "@/brand/AppShell";
+import { copy } from "@/copy";
 import { AuthProvider } from "@/lib/auth";
 import { FilterProvider } from "@/lib/filters";
 import "./tokens.css";
 
 export const metadata: Metadata = {
-  title: "DISCOVER Analytics",
-  description: "La brújula de tu público. Estudios y métricas de panas a panas.",
+  title: copy.meta.title,
+  description: copy.meta.description,
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

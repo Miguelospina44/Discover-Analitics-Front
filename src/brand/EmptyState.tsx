@@ -12,28 +12,28 @@ export function EmptyState({ title, body, action }: EmptyStateProps) {
     <div
       className="surface-card pattern-stamp"
       style={{
-        padding: "2.5rem 1.75rem",
+        padding: "2.75rem 1.85rem",
         textAlign: "center",
-        maxWidth: 480,
+        maxWidth: 560,
         margin: "0 auto",
       }}
     >
-      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.25rem" }}>
+      <div style={{ display: "flex", justifyContent: "center", marginBottom: "1.35rem" }}>
         <DiscoverLogo variant="mark" />
       </div>
       <h2
         className="font-blogh"
         style={{
-          color: "var(--discover-obsidian)",
-          fontSize: "1.15rem",
-          margin: "0 0 0.85rem",
+          color: "var(--discover-pearl)",
+          fontSize: "1.05rem",
+          margin: "0 0 0.9rem",
         }}
       >
         {title}
       </h2>
       <p
         className="font-glora-l"
-        style={{ color: "var(--discover-ink-soft)", margin: "0 0 1.5rem", lineHeight: 1.55 }}
+        style={{ color: "var(--discover-cloud)", margin: "0 0 1.6rem", lineHeight: 1.6 }}
       >
         {body}
       </p>

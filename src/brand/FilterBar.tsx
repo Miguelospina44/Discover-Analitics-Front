@@ -1,15 +1,11 @@
 "use client";
 
-import type { CSSProperties, MouseEvent } from "react";
+import type { MouseEvent } from "react";
 import type { AccountOut, VenueOut } from "@/lib/types";
+import { copy, genderLabel } from "@/copy";
 import { useFilters, type GenderFilter } from "@/lib/filters";
 
-const GENDER_OPTS: { id: NonNullable<GenderFilter>; label: string }[] = [
-  { id: "woman", label: "Mujer" },
-  { id: "man", label: "Hombre" },
-  { id: "other", label: "Otro" },
-  { id: "undisclosed", label: "Sin dato" },
-];
+const GENDER_OPTS: NonNullable<GenderFilter>[] = ["woman", "man", "other", "undisclosed"];
 
 type Props = {
   isSuperAdmin: boolean;
@@ -36,59 +32,49 @@ export function FilterBar({ isSuperAdmin, accounts, venues }: Props) {
     hasActiveFilters,
   } = useFilters();
 
-  const dateStyle: CSSProperties = {
-    padding: "0.45rem 0.75rem",
-    borderRadius: 999,
-    border: "1px solid var(--discover-obsidian)",
-    background: "rgba(255,255,255,0.7)",
-    fontFamily: "var(--font-ui)",
-    fontSize: "0.85rem",
-    color: "var(--discover-ink)",
-  };
-
   return (
-    <section className="surface-card filter-bar" style={{ padding: "1.15rem 1.25rem", marginBottom: "1.75rem" }}>
+    <section className="surface-card filter-bar" style={{ padding: "1.35rem 1.4rem", marginBottom: "1.85rem" }}>
       <div
         style={{
           display: "flex",
           flexWrap: "wrap",
           alignItems: "flex-end",
-          gap: "1rem 1.25rem",
+          gap: "1rem 1.35rem",
           justifyContent: "space-between",
         }}
       >
         <div>
-          <span className="scope-picker__label">Fechas</span>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
+          <span className="scope-picker__label">{copy.filters.period}</span>
+          <div style={{ display: "flex", gap: "0.55rem", flexWrap: "wrap", alignItems: "center" }}>
             <input
               type="date"
               value={period.start}
               onChange={(e) => setPeriod({ ...period, start: e.target.value })}
-              style={dateStyle}
-              aria-label="Desde"
+              className="input-date"
+              aria-label={copy.filters.from}
             />
-            <span className="font-glora-xl" style={{ color: "var(--discover-storm)" }}>
+            <span className="font-glora-xl" style={{ color: "var(--discover-cloud)" }}>
               →
             </span>
             <input
               type="date"
               value={period.end}
               onChange={(e) => setPeriod({ ...period, end: e.target.value })}
-              style={dateStyle}
-              aria-label="Hasta"
+              className="input-date"
+              aria-label={copy.filters.to}
             />
           </div>
         </div>
         {hasActiveFilters ? (
           <button type="button" className="scope-chip" onMouseDown={hushMouseFocus} onClick={clear}>
-            Limpiar filtros
+            {copy.filters.clear}
           </button>
         ) : null}
       </div>
 
       {isSuperAdmin && accounts.length > 0 ? (
-        <div className="scope-picker" style={{ marginTop: "1rem" }}>
-          <span className="scope-picker__label">Cliente</span>
+        <div className="scope-picker">
+          <span className="scope-picker__label">{copy.filters.client}</span>
           <div className="scope-picker__chips">
             {accounts.map((a) => (
               <button
@@ -106,8 +92,8 @@ export function FilterBar({ isSuperAdmin, accounts, venues }: Props) {
       ) : null}
 
       {venues.length > 0 ? (
-        <div className="scope-picker" style={{ marginTop: "1rem" }}>
-          <span className="scope-picker__label">Venue</span>
+        <div className="scope-picker">
+          <span className="scope-picker__label">{copy.filters.venue}</span>
           <div className="scope-picker__chips">
             {venues.map((v) => (
               <button
@@ -124,18 +110,18 @@ export function FilterBar({ isSuperAdmin, accounts, venues }: Props) {
         </div>
       ) : null}
 
-      <div className="scope-picker" style={{ marginTop: "1rem" }}>
-        <span className="scope-picker__label">Género</span>
+      <div className="scope-picker">
+        <span className="scope-picker__label">{copy.filters.audience}</span>
         <div className="scope-picker__chips">
           {GENDER_OPTS.map((g) => (
             <button
-              key={g.id}
+              key={g}
               type="button"
-              className={`scope-chip${gender === g.id ? " scope-chip--active" : ""}`}
+              className={`scope-chip${gender === g ? " scope-chip--active" : ""}`}
               onMouseDown={hushMouseFocus}
-              onClick={() => toggleGender(g.id)}
+              onClick={() => toggleGender(g)}
             >
-              {g.label}
+              {genderLabel(g)}
             </button>
           ))}
         </div>

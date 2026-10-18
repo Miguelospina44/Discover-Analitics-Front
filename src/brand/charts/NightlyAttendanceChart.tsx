@@ -11,7 +11,7 @@ import {
   YAxis,
 } from "recharts";
 
-const PALETTE = ["#111111", "#F3F188", "#6B7280", "#374151", "#9CA3AF"];
+import { chartSeries, chartTheme, chartTooltipStyle } from "@/brand/chart-tokens";
 
 type Props = {
   rows: Record<string, string | number>[];
@@ -43,34 +43,35 @@ export function NightlyAttendanceChart({
   return (
     <div
       className="chart-crossfilter"
-      style={{ width: "100%", height: 280 }}
+      style={{ width: "100%", height: 300 }}
       onMouseDown={hushFocus}
     >
       <ResponsiveContainer>
-        <LineChart data={rows} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-          <CartesianGrid stroke="rgba(17,17,17,0.06)" vertical={false} />
+        <LineChart data={rows} margin={{ top: 10, right: 12, left: 0, bottom: 4 }}>
+          <CartesianGrid stroke={chartTheme.grid} vertical={false} />
           <XAxis
             dataKey="night_date"
-            tick={{ fill: "#6B7280", fontSize: 11 }}
+            tick={{ fill: chartTheme.axis, fontSize: 11 }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: string) => v.slice(5)}
           />
           <YAxis
-            tick={{ fill: "#6B7280", fontSize: 11 }}
+            tick={{ fill: chartTheme.axis, fontSize: 11 }}
             tickLine={false}
             axisLine={false}
-            width={40}
+            width={44}
           />
           <Tooltip
-            contentStyle={{
-              borderRadius: 12,
-              border: "1px solid rgba(17,17,17,0.08)",
-              background: "rgba(255,255,255,0.95)",
-            }}
+            contentStyle={chartTooltipStyle}
+            labelStyle={{ color: chartTheme.tooltipText }}
+            itemStyle={{ color: chartTheme.tooltipText }}
           />
           <Legend
             wrapperStyle={{ cursor: onToggleVenue ? "pointer" : undefined }}
+            formatter={(value) => (
+              <span style={{ color: chartTheme.axis, fontSize: 12 }}>{value}</span>
+            )}
             onClick={(e) => {
               const dataKey = String(e.dataKey ?? "");
               const venueId = venueIdByKey[dataKey];
@@ -87,9 +88,9 @@ export function NightlyAttendanceChart({
                 type="monotone"
                 dataKey={key}
                 name={venueLabels[key] ?? key}
-                stroke={PALETTE[i % PALETTE.length]}
-                strokeWidth={2.5}
-                strokeOpacity={dimmed ? 0.28 : 1}
+                stroke={chartSeries[i % chartSeries.length]}
+                strokeWidth={2.25}
+                strokeOpacity={dimmed ? 0.22 : 1}
                 isAnimationActive={false}
                 dot={false}
                 activeDot={false}

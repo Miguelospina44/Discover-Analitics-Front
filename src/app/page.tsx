@@ -13,6 +13,7 @@ import { useRouter } from "next/navigation";
 import { EmptyState } from "@/brand/EmptyState";
 import { DiscoverLogo } from "@/brand/DiscoverLogo";
 import { FilterBar } from "@/brand/FilterBar";
+import { copy } from "@/copy";
 
 const GenderMixChart = dynamic(
   () => import("@/brand/charts/GenderMixChart").then((m) => m.GenderMixChart),
@@ -38,6 +39,7 @@ import {
 import { useAuth } from "@/lib/auth";
 import { useFilters, type GenderFilter } from "@/lib/filters";
 import {
+  formatCount,
   formatMoney,
   pivotAttendanceByNight,
   pivotSalesByNight,
@@ -121,11 +123,7 @@ export default function HomePage() {
         router.replace("/login");
         return;
       }
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "No pudimos traer las métricas. Reintentá en un toque.",
-      );
+      setError(err instanceof ApiError ? err.message : copy.errors.metrics);
     } finally {
       setBootLoading(false);
       setRefreshing(false);
@@ -175,8 +173,8 @@ export default function HomePage() {
   if (!ready || !token || !me) {
     return (
       <main style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)" }}>
-          Cargando el parche…
+        <p className="font-glora-l" style={{ color: "var(--discover-cloud)" }}>
+          {copy.loading}
         </p>
       </main>
     );
@@ -188,9 +186,9 @@ export default function HomePage() {
   const source = attendance?.data_source ?? sales?.data_source ?? "—";
   const scopeLabel = showClientPicker
     ? accountId
-      ? accounts.find((a) => a.id === accountId)?.name ?? "cliente"
-      : "global"
-    : me.account_name ?? "tu club";
+      ? accounts.find((a) => a.id === accountId)?.name ?? copy.dashboard.scopeClient
+      : copy.dashboard.scopeGlobal
+    : me.account_name ?? copy.dashboard.scopeBusiness;
 
   const empty =
     !bootLoading &&
@@ -208,32 +206,34 @@ export default function HomePage() {
   };
 
   return (
-    <main style={{ maxWidth: 1040, margin: "0 auto", padding: "2.5rem 1.5rem 4rem" }}>
-      <section style={{ marginBottom: "1.5rem" }}>
+    <main style={{ maxWidth: 1120, margin: "0 auto", padding: "2.75rem 1.5rem 4.5rem" }}>
+      <section style={{ marginBottom: "1.75rem" }}>
         <DiscoverLogo variant="primary" />
         <p
           className="font-glora-l"
           style={{
-            color: "var(--discover-ink-soft)",
-            maxWidth: 560,
-            marginTop: "1.25rem",
+            color: "var(--discover-cloud)",
+            maxWidth: 640,
+            marginTop: "1.15rem",
             fontSize: "1.05rem",
             lineHeight: 1.55,
-            fontStyle: "italic",
             fontWeight: 300,
           }}
         >
           {isSuperAdmin
-            ? "Vista gremial: todos los clientes y el pulso global."
-            : `Tu parche: ${me.account_name ?? "cliente"}. Lo tuyo + el promedio anónimo del gremio.`}
+            ? copy.dashboard.introAdmin
+            : copy.dashboard.introOwner(me.account_name ?? copy.dashboard.scopeBusiness)}
         </p>
-        <p className="font-glora-xl" style={{ color: "var(--discover-storm)", marginTop: "0.75rem" }}>
+        <p
+          className="font-glora-xl"
+          style={{ color: "var(--discover-cloud)", marginTop: "0.85rem", fontSize: "0.85rem" }}
+        >
           {period.start} → {period.end}
           {" · "}
-          <span style={{ color: "var(--discover-obsidian)", fontWeight: 400 }}>{scopeLabel}</span>
+          <span style={{ color: "var(--discover-pearl)", fontWeight: 400 }}>{scopeLabel}</span>
           {" · "}
           {source}
-          {refreshing ? " · actualizando…" : ""}
+          {refreshing ? ` · ${copy.refreshing}` : ""}
         </p>
       </section>
 
@@ -244,18 +244,18 @@ export default function HomePage() {
       />
 
       {bootLoading && !attendance ? (
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)", marginBottom: "2rem" }}>
-          Cargando el parche…
+        <p className="font-glora-l" style={{ color: "var(--discover-cloud)", marginBottom: "2rem" }}>
+          {copy.loading}
         </p>
       ) : null}
 
       {error ? (
-        <div className="surface-card" style={{ padding: "1.5rem", marginBottom: "2rem" }}>
-          <p className="font-glora" style={{ color: "var(--discover-tomato)", marginBottom: "1rem" }}>
+        <div className="surface-card" style={{ padding: "1.6rem", marginBottom: "2rem" }}>
+          <p className="font-glora" style={{ color: "var(--discover-terracotta)", marginBottom: "1rem" }}>
             {error}
           </p>
           <button type="button" className="btn-discover" onClick={() => void load()}>
-            Reintentar
+            {copy.retry}
           </button>
         </div>
       ) : null}
@@ -268,84 +268,95 @@ export default function HomePage() {
           <section
             style={{
               display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 168px), 1fr))",
               gap: "1rem",
-              marginBottom: "2.5rem",
+              marginBottom: "2.25rem",
             }}
           >
-            <KpiCard label="Tickets redimidos" value={String(tickets)} hint={scopeLabel} />
-            <KpiCard label="Órdenes" value={String(orders)} hint={scopeLabel} />
-            <KpiCard label="Revenue" value={formatMoney(revenue)} hint={scopeLabel} />
+            <KpiCard label={copy.dashboard.kpis.attendance} value={formatCount(tickets)} hint={scopeLabel} />
+            <KpiCard label={copy.dashboard.kpis.orders} value={formatCount(orders)} hint={scopeLabel} />
+            <KpiCard label={copy.dashboard.kpis.revenue} value={formatMoney(revenue)} hint={scopeLabel} />
             <KpiCard
-              label="% Mujer"
+              label={copy.dashboard.kpis.women}
               value={pct(genderMeasure?.points.find((p) => p.gender === "woman")?.share)}
               hint={scopeLabel}
             />
             <KpiCard
-              label="% Hombre"
+              label={copy.dashboard.kpis.men}
               value={pct(genderMeasure?.points.find((p) => p.gender === "man")?.share)}
               hint={scopeLabel}
             />
           </section>
 
           {bench ? (
-            <section className="surface-card" style={{ padding: "1.5rem 1.25rem", marginBottom: "1.75rem" }}>
+            <section className="surface-card" style={{ padding: "1.6rem 1.4rem", marginBottom: "1.75rem" }}>
               <h2
                 className="font-blogh"
-                style={{ color: "var(--discover-obsidian)", fontSize: "0.95rem", margin: "0 0 0.5rem" }}
+                style={{ color: "var(--discover-pearl)", fontSize: "0.88rem", margin: "0 0 0.55rem" }}
               >
-                El parche gremial
+                {copy.dashboard.sector.title}
               </h2>
-              <p className="font-glora-xl" style={{ color: "var(--discover-storm)", margin: "0 0 1.25rem", fontSize: "0.8rem" }}>
-                {bench.note}
+              <p
+                className="font-glora-xl"
+                style={{ color: "var(--discover-cloud)", margin: "0 0 1.35rem", fontSize: "0.85rem", lineHeight: 1.5 }}
+              >
+                {copy.dashboard.sector.note}
               </p>
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 148px), 1fr))",
                   gap: "1rem",
                 }}
               >
                 <KpiCard
-                  label="Avg tickets / noche"
+                  label={copy.dashboard.sector.avgAttendance}
                   value={fmtNum(bench.avg_tickets_per_venue_night)}
-                  hint="anónimo"
+                  hint={copy.dashboard.sector.hint}
                 />
                 <KpiCard
-                  label="Mediana tickets"
+                  label={copy.dashboard.sector.medianAttendance}
                   value={fmtNum(bench.median_tickets_per_venue_night)}
-                  hint="anónimo"
+                  hint={copy.dashboard.sector.hint}
                 />
                 <KpiCard
-                  label="Avg órdenes / noche"
+                  label={copy.dashboard.sector.avgOrders}
                   value={fmtNum(bench.avg_orders_per_venue_night)}
-                  hint="anónimo"
+                  hint={copy.dashboard.sector.hint}
                 />
                 <KpiCard
-                  label="Cuentas en muestra"
-                  value={String(bench.accounts_in_sample)}
-                  hint={`${bench.nights_in_sample} noches`}
+                  label={copy.dashboard.sector.sample}
+                  value={formatCount(bench.accounts_in_sample)}
+                  hint={copy.dashboard.sector.nightsHint(bench.nights_in_sample)}
                 />
-                <KpiCard label="Gremial % Mujer" value={pct(bench.share_woman)} hint="anónimo" />
-                <KpiCard label="Gremial % Hombre" value={pct(bench.share_man)} hint="anónimo" />
+                <KpiCard
+                  label={copy.dashboard.sector.women}
+                  value={pct(bench.share_woman)}
+                  hint={copy.dashboard.sector.hint}
+                />
+                <KpiCard
+                  label={copy.dashboard.sector.men}
+                  value={pct(bench.share_man)}
+                  hint={copy.dashboard.sector.hint}
+                />
               </div>
             </section>
           ) : null}
 
           {empty ? (
             <EmptyState
-              title="Aquí va a estar el parche"
-              body="Cuando haya data del estudio, los hallazgos salen acá."
+              title={copy.dashboard.empty.title}
+              body={copy.dashboard.empty.body}
               action={
                 <button type="button" className="btn-discover" onClick={() => void load()}>
-                  Reintentar
+                  {copy.retry}
                 </button>
               }
             />
           ) : (
             <>
               {genderMeasure && genderMeasure.points.length > 0 ? (
-                <ChartBlock title={genderMeasure.title} definition={genderMeasure.definition}>
+                <ChartBlock title={copy.charts.gender.title} definition={copy.charts.gender.definition}>
                   <GenderMixChart
                     points={genderMeasure.points}
                     activeGender={gender}
@@ -354,7 +365,7 @@ export default function HomePage() {
                 </ChartBlock>
               ) : null}
               {attendancePivot ? (
-                <ChartBlock title={attendance.title} definition={attendance.definition}>
+                <ChartBlock title={copy.charts.attendance.title} definition={copy.charts.attendance.definition}>
                   <NightlyAttendanceChart
                     rows={attendancePivot.rows}
                     venueKeys={attendancePivot.venueKeys}
@@ -367,25 +378,24 @@ export default function HomePage() {
               ) : null}
               {salesPivot ? (
                 <ChartBlock
-                  title={sales.title}
+                  title={copy.charts.sales.title}
                   definition={
                     gender
-                      ? `${sales.definition} Ventas aún sin dimensión de género.`
-                      : sales.definition
+                      ? `${copy.charts.sales.definition} ${copy.dashboard.salesGenderNote}`
+                      : copy.charts.sales.definition
                   }
                 >
                   {gender ? (
                     <p
                       className="font-glora-xl"
                       style={{
-                        color: "var(--discover-storm)",
+                        color: "var(--discover-cloud)",
                         margin: "0 0 1rem",
                         fontSize: "0.85rem",
-                        fontStyle: "italic",
+                        lineHeight: 1.5,
                       }}
                     >
-                      Ventas aún sin dimensión de género — el filtro de género no aplica a este
-                      visual.
+                      {copy.dashboard.salesGenderNote}
                     </p>
                   ) : null}
                   <SalesByNightChart
@@ -408,7 +418,7 @@ export default function HomePage() {
 
 function fmtNum(n: number | null | undefined): string {
   if (n == null) return "—";
-  return n.toFixed(1);
+  return n.toLocaleString("es-CO", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }
 
 function pct(n: number | null | undefined): string {
@@ -418,23 +428,23 @@ function pct(n: number | null | undefined): string {
 
 function KpiCard({ label, value, hint }: { label: string; value: string; hint: string }) {
   return (
-    <article className="surface-card" style={{ padding: "1.25rem 1.1rem", minWidth: 0 }}>
-      <div className="kpi-label" style={{ marginBottom: "0.65rem", fontSize: "0.75rem" }}>
+    <article className="surface-card" style={{ padding: "1.3rem 1.15rem", minWidth: 0 }}>
+      <div className="kpi-label" style={{ marginBottom: "0.7rem" }}>
         {label}
       </div>
       <div
         className="kpi-number"
         title={value}
-        style={{ fontSize: value.length > 10 ? "1.15rem" : "clamp(1.35rem, 3.5vw, 1.85rem)" }}
+        style={{ fontSize: value.length > 10 ? "1.2rem" : "clamp(1.45rem, 3.5vw, 1.95rem)" }}
       >
         {value}
       </div>
       <div
         className="font-glora-xl"
         style={{
-          marginTop: "0.5rem",
-          fontSize: "0.8rem",
-          color: "var(--discover-storm)",
+          marginTop: "0.55rem",
+          fontSize: "0.75rem",
+          color: "var(--discover-cloud)",
           overflow: "hidden",
           textOverflow: "ellipsis",
           whiteSpace: "nowrap",
@@ -456,16 +466,16 @@ function ChartBlock({
   children: ReactNode;
 }) {
   return (
-    <section className="surface-card" style={{ padding: "1.5rem 1.25rem", marginBottom: "1.75rem" }}>
+    <section className="surface-card" style={{ padding: "1.6rem 1.4rem", marginBottom: "1.75rem" }}>
       <h2
         className="font-blogh"
-        style={{ color: "var(--discover-obsidian)", fontSize: "0.95rem", margin: "0 0 0.5rem" }}
+        style={{ color: "var(--discover-pearl)", fontSize: "0.88rem", margin: "0 0 0.55rem" }}
       >
         {title}
       </h2>
       <p
         className="font-glora-xl"
-        style={{ color: "var(--discover-storm)", margin: "0 0 1.25rem", fontSize: "0.8rem" }}
+        style={{ color: "var(--discover-cloud)", margin: "0 0 1.35rem", fontSize: "0.85rem", lineHeight: 1.5 }}
       >
         {definition}
       </p>

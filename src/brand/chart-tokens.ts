@@ -1,44 +1,61 @@
 /**
- * Discover chart / viz tokens — light canvas, low saturation.
- * Brand yellow #F3F188 kept for accents; chart series 1 uses a readable olive of the same hue family for contrast on white (still not a Material gold).
+ * Discover chart / viz tokens — premium dark canvas, professional palette.
+ * Champagne #C9A86D as primary accent; muted complementary tones for series.
  */
 export const discoverColors = {
-  obsidian: "#000000",
-  yellow: "#F3F188",
-  ultraviolet: "#A894C9",
-  tomato: "#C45A45",
-  cornflower: "#7A9BC4",
-  plum: "#C9A8C8",
-  paper: "#FFFFFF",
-  mist: "#F7F7F4",
-  fog: "#EFEEE8",
-  line: "#E4E2DA",
-  storm: "#6B6D78",
-  ink: "#121212",
-  /** Readable chart primary derived from brand yellow hue */
-  chartYellow: "#C9C65A",
+  obsidian: "#0F1419",
+  champagne: "#C9A86D",
+  slateBlue: "#6B8CAE",
+  terracotta: "#C67B6B",
+  sage: "#7FA885",
+  mauve: "#9B869B",
+  night: "#0F1419",
+  graphite: "#1A1D23",
+  steel: "#252932",
+  slate: "#3A3F4B",
+  fog: "#6D7484",
+  cloud: "#B4BBC8",
+  pearl: "#E8EAF0",
+  white: "#FFFFFF",
+  chartPrimary: "#C9A86D",
 } as const;
 
 export const chartSeries = [
-  discoverColors.chartYellow,
-  discoverColors.ultraviolet,
-  discoverColors.cornflower,
-  discoverColors.plum,
+  discoverColors.champagne,
+  discoverColors.slateBlue,
+  discoverColors.sage,
+  discoverColors.mauve,
 ] as const;
 
-export const chartAlert = discoverColors.tomato;
+export const chartAlert = discoverColors.terracotta;
 
 export const chartTheme = {
   background: "transparent",
-  grid: "rgba(18, 18, 18, 0.08)",
-  axis: discoverColors.storm,
-  tooltipBg: "rgba(255, 255, 255, 0.92)",
-  tooltipBorder: discoverColors.line,
-  tooltipText: discoverColors.ink,
+  grid: "rgba(232, 234, 240, 0.1)",
+  axis: discoverColors.cloud,
+  tooltipBg: "rgba(37, 41, 50, 0.96)",
+  tooltipBorder: discoverColors.slate,
+  tooltipText: discoverColors.pearl,
   series: [...chartSeries],
   alert: chartAlert,
-  positive: discoverColors.chartYellow,
-  negative: discoverColors.tomato,
+  positive: discoverColors.sage,
+  negative: discoverColors.terracotta,
 } as const;
+
+export const chartTooltipStyle = {
+  borderRadius: 10,
+  border: `1px solid ${chartTheme.tooltipBorder}`,
+  background: chartTheme.tooltipBg,
+  color: chartTheme.tooltipText,
+  fontSize: 12,
+  boxShadow: "0 10px 28px rgba(0, 0, 0, 0.35)",
+} as const;
+
+export const genderSeriesColors: Record<string, string> = {
+  woman: discoverColors.champagne,
+  man: discoverColors.slateBlue,
+  other: discoverColors.sage,
+  undisclosed: discoverColors.mauve,
+};
 
 export type DiscoverColorKey = keyof typeof discoverColors;

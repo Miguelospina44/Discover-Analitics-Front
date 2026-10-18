@@ -22,6 +22,10 @@ export function formatMoney(cents: number): string {
   }).format(cents);
 }
 
+export function formatCount(n: number): string {
+  return n.toLocaleString("es-CO");
+}
+
 type NightRow = { night_date: string; [venueKey: string]: string | number };
 
 /** Pivot attendance points → one row per night, columns per venue (short id). */
@@ -39,7 +43,7 @@ export function pivotAttendanceByNight(
   const venueIdByKey: Record<string, string> = {};
   const venueKeys = venueIds.map((id, i) => {
     const key = `v${i + 1}`;
-    venueLabels[key] = venueNames?.[id] ?? `Venue ${i + 1}`;
+    venueLabels[key] = venueNames?.[id] ?? `Establecimiento ${i + 1}`;
     venueIdByKey[key] = id;
     return key;
   });
@@ -73,7 +77,7 @@ export function pivotSalesByNight(
   const venueIdByKey: Record<string, string> = {};
   const venueKeys = venueIds.map((id, i) => {
     const key = `v${i + 1}`;
-    venueLabels[key] = venueNames?.[id] ?? `Venue ${i + 1}`;
+    venueLabels[key] = venueNames?.[id] ?? `Establecimiento ${i + 1}`;
     venueIdByKey[key] = id;
     return key;
   });

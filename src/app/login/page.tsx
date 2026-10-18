@@ -3,20 +3,9 @@
 import { FormEvent, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { DiscoverLogo } from "@/brand/DiscoverLogo";
+import { copy } from "@/copy";
 import { useAuth } from "@/lib/auth";
 import { ApiError, DEMO_LOGINS } from "@/lib/types";
-
-const inputStyle: React.CSSProperties = {
-  width: "100%",
-  padding: "0.75rem 1rem",
-  borderRadius: 999,
-  border: "1px solid var(--discover-line-strong)",
-  background: "var(--discover-paper)",
-  color: "var(--discover-ink)",
-  fontFamily: "var(--font-ui)",
-  fontWeight: 400,
-  marginBottom: "1rem",
-};
 
 export default function LoginPage() {
   const { token, ready, login } = useAuth();
@@ -39,7 +28,7 @@ export default function LoginPage() {
       router.replace("/");
     } catch (err) {
       if (err instanceof ApiError) setError(err.message);
-      else setError("No pudimos conectar con el API. ¿Está arriba en :8000?");
+      else setError(copy.errors.apiUnreachable);
     } finally {
       setPending(false);
     }
@@ -48,8 +37,8 @@ export default function LoginPage() {
   if (!ready || token) {
     return (
       <main style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)" }}>
-          Cargando el parche…
+        <p className="font-glora-l" style={{ color: "var(--discover-cloud)" }}>
+          {copy.loading}
         </p>
       </main>
     );
@@ -63,7 +52,7 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: "2rem 1.25rem",
+        padding: "2.5rem 1.25rem",
       }}
     >
       <form
@@ -71,19 +60,30 @@ export default function LoginPage() {
         className="surface-card"
         style={{
           width: "100%",
-          maxWidth: 400,
-          padding: "2rem 1.5rem",
-          boxShadow: "var(--glow-violet)",
-          borderTop: "3px solid var(--discover-yellow)",
+          maxWidth: 420,
+          padding: "2.25rem 1.75rem",
+          boxShadow: "var(--glow-subtle)",
+          borderTop: "2px solid var(--discover-champagne)",
         }}
       >
-        <div style={{ marginBottom: "1.75rem" }}>
+        <div style={{ marginBottom: "1.5rem" }}>
           <DiscoverLogo variant="primary" />
         </div>
-        <p className="font-glora-l" style={{ color: "var(--discover-ink-soft)", marginBottom: "1rem" }}>
-          Entrá al estudio. De panas a panas.
+        <p
+          className="font-glora-l"
+          style={{
+            color: "var(--discover-cloud)",
+            marginBottom: "1.35rem",
+            lineHeight: 1.55,
+            fontSize: "0.98rem",
+          }}
+        >
+          {copy.login.intro}
         </p>
-        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+        <p className="scope-picker__label" style={{ marginBottom: "0.55rem" }}>
+          {copy.login.demoHint}
+        </p>
+        <div style={{ display: "flex", gap: "0.5rem", marginBottom: "1.35rem", flexWrap: "wrap" }}>
           {DEMO_LOGINS.map((demo) => (
             <button
               key={demo.email}
@@ -93,55 +93,57 @@ export default function LoginPage() {
                 setPassword(demo.password);
                 setError(null);
               }}
-              className="font-glora"
-              style={{
-                border: "1px solid var(--discover-line-strong)",
-                background:
-                  email === demo.email ? "var(--discover-yellow)" : "var(--discover-paper)",
-                color: "var(--discover-obsidian)",
-                borderRadius: 999,
-                padding: "0.4rem 0.85rem",
-                fontSize: "0.75rem",
-                cursor: "pointer",
-              }}
+              className={`scope-chip${email === demo.email ? " scope-chip--active" : ""}`}
             >
               {demo.label}
             </button>
           ))}
         </div>
-        <label className="font-glora-xl" style={{ display: "block", color: "var(--discover-storm)", marginBottom: 6 }}>
-          Correo
+        <label
+          className="font-glora-xl"
+          htmlFor="login-email"
+          style={{ display: "block", color: "var(--discover-cloud)", marginBottom: 6 }}
+        >
+          {copy.login.email}
         </label>
         <input
+          id="login-email"
           type="email"
           autoComplete="username"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          style={inputStyle}
+          className="input-field"
+          style={{ marginBottom: "1rem" }}
         />
-        <label className="font-glora-xl" style={{ display: "block", color: "var(--discover-storm)", marginBottom: 6 }}>
-          Clave
+        <label
+          className="font-glora-xl"
+          htmlFor="login-password"
+          style={{ display: "block", color: "var(--discover-cloud)", marginBottom: 6 }}
+        >
+          {copy.login.password}
         </label>
         <input
+          id="login-password"
           type="password"
           autoComplete="current-password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          style={{ ...inputStyle, marginBottom: "1.35rem" }}
+          className="input-field"
+          style={{ marginBottom: "1.35rem" }}
         />
         {error ? (
           <p
             className="font-glora"
-            style={{ color: "var(--discover-tomato)", marginBottom: "1rem", fontSize: "0.9rem" }}
+            style={{ color: "var(--discover-terracotta)", marginBottom: "1rem", fontSize: "0.9rem" }}
             role="alert"
           >
             {error}
           </p>
         ) : null}
         <button type="submit" className="btn-discover" style={{ width: "100%" }} disabled={pending}>
-          {pending ? "Entrando…" : "Entrar al parche"}
+          {pending ? copy.login.submitting : copy.login.submit}
         </button>
       </form>
     </main>
