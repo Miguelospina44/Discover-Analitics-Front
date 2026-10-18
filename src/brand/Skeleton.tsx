@@ -1,30 +1,24 @@
 export function DashboardSkeleton() {
   return (
     <div aria-busy="true" aria-live="polite">
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
-          gap: "1rem",
-          marginBottom: "1.5rem",
-        }}
-      >
-        {[0, 1, 2].map((i) => (
-          <div key={i} className="surface-card" style={{ padding: "1.35rem" }}>
-            <div className="skeleton skeleton-pulse" style={{ height: 12, width: "42%" }} />
-            <div
-              className="skeleton skeleton-pulse"
-              style={{ height: 36, width: "70%", marginTop: "1.1rem" }}
-            />
-          </div>
-        ))}
+      <div className="kpi-stage mb-6">
+        <div className="surface-card kpi-hero px-5 py-5">
+          <div className="skeleton skeleton-pulse h-3 w-[28%]" />
+          <div className="skeleton skeleton-pulse mt-4 h-10 w-[62%]" />
+          <div className="skeleton skeleton-pulse mt-3 h-3 w-[40%]" />
+        </div>
+        <div className="surface-card px-5 py-5">
+          <div className="skeleton skeleton-pulse h-3 w-[42%]" />
+          <div className="skeleton skeleton-pulse mt-4 h-8 w-[55%]" />
+        </div>
+        <div className="surface-card px-5 py-5">
+          <div className="skeleton skeleton-pulse h-3 w-[42%]" />
+          <div className="skeleton skeleton-pulse mt-4 h-8 w-[55%]" />
+        </div>
       </div>
-      <div className="surface-card" style={{ padding: "1.6rem", minHeight: 280 }}>
-        <div className="skeleton skeleton-pulse" style={{ height: 18, width: "48%" }} />
-        <div
-          className="skeleton skeleton-pulse"
-          style={{ height: 180, width: "100%", marginTop: "1.4rem" }}
-        />
+      <div className="surface-card min-h-[16.25rem] px-6 py-6">
+        <div className="skeleton skeleton-pulse h-4 w-[48%]" />
+        <div className="skeleton skeleton-pulse mt-6 h-[11.25rem] w-full" />
       </div>
     </div>
   );

@@ -3,12 +3,15 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Info } from "@phosphor-icons/react";
+import { Info, WarningCircle } from "@phosphor-icons/react";
 import { ChartBlock } from "@/brand/ChartBlock";
 import { EmptyState } from "@/brand/EmptyState";
 import { FilterBar } from "@/brand/FilterBar";
-import { KpiCard } from "@/brand/KpiCard";
+import { KpiStat } from "@/brand/KpiStat";
+import { SectorCompare } from "@/brand/SectorCompare";
 import { DashboardSkeleton } from "@/brand/Skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { copy } from "@/copy";
 
 const GenderMixChart = dynamic(
@@ -45,10 +48,13 @@ import {
 } from "@/lib/demo-data";
 import { useFilters, type GenderFilter } from "@/lib/filters";
 import {
+  formatAverage,
   formatCount,
-  formatMoney,
+  formatPeriodRange,
+  formatRevenueFromField,
   pivotAttendanceByNight,
   pivotSalesByNight,
+  sectorDeltaPercent,
   sumOrders,
   sumRedeemed,
   sumRevenueCents,
@@ -70,11 +76,26 @@ function readVista(raw: string | null): Vista {
   return "datos";
 }
 
+function deltaHint(own: number | null, sector: number | null): {
+  text: string;
+  tone: "up" | "down" | "muted";
+} {
+  const pct = sectorDeltaPercent(own, sector);
+  if (pct == null || sector == null) {
+    return { text: copy.dashboard.sector.hint, tone: "muted" };
+  }
+  const abs = Math.abs(pct).toLocaleString("es-CO", { maximumFractionDigits: 0 });
+  if (pct >= 0) {
+    return { text: copy.dashboard.kpis.vsSectorAbove(abs), tone: "up" };
+  }
+  return { text: copy.dashboard.kpis.vsSectorBelow(abs), tone: "down" };
+}
+
 export default function Page() {
   return (
     <Suspense
       fallback={
-        <main className="page-wrap">
+        <main id="contenido" className="page-wrap" tabIndex={-1}>
           <DashboardSkeleton />
         </main>
       }
@@ -93,6 +114,8 @@ function HomePage() {
     gender,
     toggleVenueId,
     toggleGender,
+    clear,
+    hasActiveFilters,
   } = useFilters();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -116,31 +139,28 @@ function HomePage() {
 
   const showClientPicker = me?.role === "super_admin" && isSuperAdmin;
 
-  const applyDemo = useCallback(
-    (mode: Vista) => {
-      setAccounts(DEMO_ACCOUNTS);
-      setVenues(DEMO_VENUES);
-      setBench(DEMO_BENCH);
-      setGenderMeasure(DEMO_GENDER);
-      if (mode === "vacio") {
-        setAttendance(DEMO_EMPTY_ATTENDANCE);
-        setSales(DEMO_EMPTY_SALES);
-        setError(null);
-      } else if (mode === "error") {
-        setAttendance(null);
-        setSales(null);
-        setError(copy.errors.metrics);
-      } else {
-        setAttendance(DEMO_ATTENDANCE);
-        setSales(DEMO_SALES);
-        setError(null);
-      }
-      hasMetricsRef.current = true;
-      setBootLoading(mode === "carga");
-      setRefreshing(false);
-    },
-    [],
-  );
+  const applyDemo = useCallback((mode: Vista) => {
+    setAccounts(DEMO_ACCOUNTS);
+    setVenues(DEMO_VENUES);
+    setBench(DEMO_BENCH);
+    setGenderMeasure(DEMO_GENDER);
+    if (mode === "vacio") {
+      setAttendance(DEMO_EMPTY_ATTENDANCE);
+      setSales(DEMO_EMPTY_SALES);
+      setError(null);
+    } else if (mode === "error") {
+      setAttendance(null);
+      setSales(null);
+      setError(copy.errors.metrics);
+    } else {
+      setAttendance(DEMO_ATTENDANCE);
+      setSales(DEMO_SALES);
+      setError(null);
+    }
+    hasMetricsRef.current = true;
+    setBootLoading(mode === "carga");
+    setRefreshing(false);
+  }, []);
 
   const load = useCallback(async () => {
     if (!me) return;
@@ -215,44 +235,54 @@ function HomePage() {
     return map;
   }, [venues]);
 
+  const attendancePoints = useMemo(() => {
+    if (!attendance) return [];
+    return venueId ? attendance.points.filter((p) => p.venue_id === venueId) : attendance.points;
+  }, [attendance, venueId]);
+
+  const salesPoints = useMemo(() => {
+    if (!sales) return [];
+    return venueId ? sales.points.filter((p) => p.venue_id === venueId) : sales.points;
+  }, [sales, venueId]);
+
   const attendancePivot = useMemo(() => {
     if (!attendance) return null;
-    const pivot = pivotAttendanceByNight(attendance.points);
+    const pivot = pivotAttendanceByNight(attendancePoints);
     const venueLabels = { ...pivot.venueLabels };
     for (const [key, id] of Object.entries(pivot.venueIdByKey)) {
       if (venueNameById[id]) venueLabels[key] = venueNameById[id];
     }
     return { ...pivot, venueLabels };
-  }, [attendance, venueNameById]);
+  }, [attendance, attendancePoints, venueNameById]);
 
   const salesPivot = useMemo(() => {
     if (!sales) return null;
-    const pivot = pivotSalesByNight(sales.points);
+    const pivot = pivotSalesByNight(salesPoints);
     const venueLabels = { ...pivot.venueLabels };
     for (const [key, id] of Object.entries(pivot.venueIdByKey)) {
       if (venueNameById[id]) venueLabels[key] = venueNameById[id];
     }
     return { ...pivot, venueLabels };
-  }, [sales, venueNameById]);
+  }, [sales, salesPoints, venueNameById]);
 
   if (!ready || !signedIn || !me) {
     return (
-      <main className="page-wrap">
+      <main id="contenido" className="page-wrap" tabIndex={-1}>
         <p className="page-kicker">{copy.loading}</p>
         <DashboardSkeleton />
       </main>
     );
   }
 
-  const tickets = attendance ? sumRedeemed(attendance.points) : 0;
-  const orders = sales ? sumOrders(sales.points) : 0;
-  const revenue = sales ? sumRevenueCents(sales.points) : 0;
-  const source = attendance?.data_source ?? sales?.data_source ?? "—";
+  const tickets = attendance ? sumRedeemed(attendancePoints) : 0;
+  const orders = sales ? sumOrders(salesPoints) : 0;
+  const revenueCents = sales ? sumRevenueCents(salesPoints) : 0;
+  const periodLabel = formatPeriodRange(period.start, period.end);
   const scopeLabel = showClientPicker
     ? accountId
-      ? accounts.find((a) => a.id === accountId)?.name ?? copy.dashboard.scopeClient
+      ? (accounts.find((a) => a.id === accountId)?.name ?? copy.dashboard.scopeClient)
       : copy.dashboard.scopeGlobal
-    : me.account_name ?? copy.dashboard.scopeBusiness;
+    : (me.account_name ?? copy.dashboard.scopeBusiness);
 
   const empty =
     !bootLoading &&
@@ -266,122 +296,100 @@ function HomePage() {
       sales.data_quality === "missing");
 
   const nightsCount = attendancePivot?.rows.length ?? 0;
-  const avgAttendance = nightsCount > 0 ? tickets / Math.max(venues.length || 1, 1) / nightsCount : null;
-  const avgOrders = nightsCount > 0 ? orders / Math.max(venues.length || 1, 1) / nightsCount : null;
+  const venueCount = Math.max(
+    new Set(attendancePoints.map((p) => p.venue_id)).size || venues.length || 1,
+    1,
+  );
+  const avgAttendance = nightsCount > 0 ? tickets / venueCount / nightsCount : null;
+  const avgOrders = nightsCount > 0 ? orders / venueCount / nightsCount : null;
+  const attendanceDelta = deltaHint(avgAttendance, bench?.avg_tickets_per_venue_night ?? null);
+  const ordersDelta = deltaHint(avgOrders, bench?.avg_orders_per_venue_night ?? null);
 
   const onToggleGender = (g: string) => {
     toggleGender(g as NonNullable<GenderFilter>);
   };
 
   return (
-    <main className="page-wrap">
-      <p className="page-kicker">{copy.dashboard.kicker}</p>
+    <main id="contenido" className="page-wrap" tabIndex={-1} aria-label={copy.main}>
       <h1 className="page-title">{copy.dashboard.title}</h1>
       <p className="page-lead">
-        {isSuperAdmin
-          ? copy.dashboard.introAdmin
-          : copy.dashboard.introOwner(me.account_name ?? copy.dashboard.scopeBusiness)}
+        {isSuperAdmin ? copy.dashboard.introAdmin : copy.dashboard.introOwner}
       </p>
       <div className="meta-row">
-        <span>
-          {period.start} → {period.end}
-        </span>
+        <span>{periodLabel}</span>
         <span>{scopeLabel}</span>
-        <span>{source}</span>
         {refreshing ? <span>{copy.refreshing}</span> : null}
       </div>
 
       {isDemo ? (
-        <p className="banner-demo" role="status" style={{ marginTop: "1.5rem" }}>
-          <Info size={18} weight="regular" aria-hidden />
-          <span>{copy.demo.banner}</span>
-        </p>
+        <Alert className="mt-6 mb-6" role="status">
+          <Info size={16} weight="regular" aria-hidden />
+          <AlertDescription>{copy.demo.banner}</AlertDescription>
+        </Alert>
       ) : (
-        <div style={{ height: "1.5rem" }} />
+        <div className="h-6" />
       )}
 
-      <FilterBar
-        isSuperAdmin={Boolean(showClientPicker)}
-        accounts={accounts}
-        venues={venues}
-      />
+      <FilterBar isSuperAdmin={Boolean(showClientPicker)} accounts={accounts} venues={venues} />
 
       {bootLoading ? <DashboardSkeleton /> : null}
 
       {error ? (
-        <div className="surface-card" style={{ padding: "1.6rem", marginBottom: "2rem" }}>
-          <p className="status-error font-glora" style={{ marginBottom: "1rem" }}>
-            {error}
-          </p>
-          <button type="button" className="btn-discover" onClick={() => void load()}>
-            {copy.retry}
-          </button>
-        </div>
+        <Alert variant="destructive" className="mb-8">
+          <WarningCircle size={16} weight="regular" aria-hidden />
+          <AlertDescription className="text-destructive">
+            <span className="block mb-3">{error}</span>
+            <Button type="button" onClick={() => void load()}>
+              {copy.retry}
+            </Button>
+          </AlertDescription>
+        </Alert>
       ) : null}
 
       {!error && !bootLoading && attendance && sales ? (
-        <div style={{ opacity: refreshing ? 0.72 : 1, transition: "opacity 160ms ease" }}>
-          <section
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
-              gap: "1rem",
-              marginBottom: "1.5rem",
-            }}
-          >
-            <KpiCard label={copy.dashboard.kpis.revenue} value={formatMoney(revenue)} hint={scopeLabel} />
-            <KpiCard
+        <div className={refreshing ? "opacity-80 transition-opacity duration-[var(--dur-fast)]" : ""}>
+          <section className="kpi-stage mb-10" aria-label={copy.dashboard.title}>
+            <KpiStat
+              hero
+              label={copy.dashboard.kpis.revenue}
+              value={formatRevenueFromField(revenueCents)}
+              hint={periodLabel}
+            />
+            <KpiStat
               label={copy.dashboard.kpis.attendance}
               value={formatCount(tickets)}
-              hint={scopeLabel}
+              hint={
+                avgAttendance != null
+                  ? copy.dashboard.kpis.perNight(formatAverage(avgAttendance))
+                  : periodLabel
+              }
             />
-            <KpiCard label={copy.dashboard.kpis.orders} value={formatCount(orders)} hint={scopeLabel} />
+            <KpiStat
+              label={copy.dashboard.kpis.orders}
+              value={formatCount(orders)}
+              hint={
+                avgOrders != null
+                  ? copy.dashboard.kpis.perNight(formatAverage(avgOrders))
+                  : periodLabel
+              }
+            />
           </section>
 
-          {bench ? (
-            <section className="surface-card" style={{ padding: "1.5rem 1.4rem", marginBottom: "1.5rem" }}>
-              <h2
-                className="font-glora"
-                style={{
-                  color: "var(--color-ink)",
-                  fontSize: "var(--step-lead)",
-                  fontWeight: 400,
-                  letterSpacing: "-0.02em",
-                  margin: "0 0 0.4rem",
-                }}
-              >
-                {copy.dashboard.sector.title}
-              </h2>
-              <p
-                className="font-glora"
-                style={{
-                  color: "var(--color-muted)",
-                  margin: "0 0 1.2rem",
-                  fontSize: "var(--step-small)",
-                  lineHeight: 1.5,
-                }}
-              >
-                {copy.dashboard.sector.note}
-              </p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 220px), 1fr))",
-                  gap: "1rem",
-                }}
-              >
-                <KpiCard
-                  label={copy.dashboard.sector.attendance}
-                  value={fmtNum(avgAttendance ?? bench.avg_tickets_per_venue_night)}
-                  hint={`${copy.dashboard.sector.hint}: ${fmtNum(bench.avg_tickets_per_venue_night)}`}
-                />
-                <KpiCard
-                  label={copy.dashboard.sector.orders}
-                  value={fmtNum(avgOrders ?? bench.avg_orders_per_venue_night)}
-                  hint={`${copy.dashboard.sector.hint}: ${fmtNum(bench.avg_orders_per_venue_night)}`}
-                />
-              </div>
-            </section>
+          {bench && !empty ? (
+            <SectorCompare
+              attendance={{
+                label: copy.dashboard.sector.attendance,
+                value: formatAverage(avgAttendance ?? bench.avg_tickets_per_venue_night),
+                hint: attendanceDelta.text,
+                tone: attendanceDelta.tone,
+              }}
+              orders={{
+                label: copy.dashboard.sector.orders,
+                value: formatAverage(avgOrders ?? bench.avg_orders_per_venue_night),
+                hint: ordersDelta.text,
+                tone: ordersDelta.tone,
+              }}
+            />
           ) : null}
 
           {empty ? (
@@ -389,9 +397,15 @@ function HomePage() {
               title={copy.dashboard.empty.title}
               body={copy.dashboard.empty.body}
               action={
-                <button type="button" className="btn-discover" onClick={() => void load()}>
-                  {copy.retry}
-                </button>
+                hasActiveFilters ? (
+                  <Button type="button" variant="secondary" onClick={clear}>
+                    {copy.filters.clear}
+                  </Button>
+                ) : (
+                  <Button type="button" onClick={() => void load()}>
+                    {copy.retry}
+                  </Button>
+                )
               }
             />
           ) : (
@@ -417,19 +431,6 @@ function HomePage() {
                       : copy.charts.sales.definition
                   }
                 >
-                  {gender ? (
-                    <p
-                      className="font-glora"
-                      style={{
-                        color: "var(--color-muted)",
-                        margin: "0 0 1rem",
-                        fontSize: "var(--step-small)",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {copy.dashboard.salesGenderNote}
-                    </p>
-                  ) : null}
                   <SalesByNightChart
                     rows={salesPivot.rows}
                     venueKeys={salesPivot.venueKeys}
@@ -455,9 +456,4 @@ function HomePage() {
       ) : null}
     </main>
   );
-}
-
-function fmtNum(n: number | null | undefined): string {
-  if (n == null) return "—";
-  return n.toLocaleString("es-CO", { minimumFractionDigits: 1, maximumFractionDigits: 1 });
 }

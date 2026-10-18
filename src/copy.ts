@@ -14,6 +14,8 @@ export const copy = {
   loading: "Cargando datos…",
   refreshing: "Actualizando",
   retry: "Volver a intentar",
+  skipToContent: "Ir al contenido",
+  main: "Contenido principal",
 
   nav: {
     panel: "Panel",
@@ -43,11 +45,9 @@ export const copy = {
   },
 
   dashboard: {
-    kicker: "Panel",
     title: "¿Cómo fue el rendimiento de su operación?",
     introAdmin: "Vista consolidada de clientes, con una referencia anónima del sector.",
-    introOwner: (accountName: string) =>
-      `${accountName}. Tres cifras del periodo y la tendencia por noche.`,
+    introOwner: "Ingresos, asistencia y órdenes del periodo que usted eligió.",
     scopeGlobal: "Todos los clientes",
     scopeClient: "Cliente",
     scopeBusiness: "Su negocio",
@@ -55,6 +55,9 @@ export const copy = {
       revenue: "Ingresos",
       attendance: "Asistencia",
       orders: "Órdenes",
+      perNight: (value: string) => `${value} por noche`,
+      vsSectorAbove: (pct: string) => `${pct} % por encima del promedio del sector`,
+      vsSectorBelow: (pct: string) => `${pct} % por debajo del promedio del sector`,
     },
     sector: {
       title: "Frente al sector",
@@ -62,6 +65,8 @@ export const copy = {
       attendance: "Asistencia por noche",
       orders: "Órdenes por noche",
       hint: "promedio del sector",
+      revenuePending:
+        "La comparación de ingresos con el sector queda pendiente: el contrato actual no envía un promedio de ingresos.",
     },
     empty: {
       title: "Sin datos en este periodo",
@@ -72,6 +77,7 @@ export const copy = {
   },
 
   filters: {
+    legend: "Filtros",
     period: "Periodo",
     from: "Desde",
     to: "Hasta",
@@ -92,9 +98,10 @@ export const copy = {
     },
     sales: {
       title: "¿Cuánto ingresó cada noche?",
-      definition: "Órdenes de boletería y covers vendidos con Discover, por fecha.",
+      definition: "Ingresos de boletería y covers vendidos con Discover, por fecha.",
     },
     people: "Personas",
+    cop: "COP",
     venueFallback: (index: number) => `Establecimiento ${index}`,
   },
 

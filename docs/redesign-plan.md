@@ -1,6 +1,6 @@
 # Plan de reforma visual — DISCOVER Analytics
 
-**Estado:** aprobado por Miguel (2026-10-18). Pregunta 1: **Tailwind v4 + shadcn restilado**. Fases 1–2 implementadas en este PR. Fases 3–5 **no arrancan** hasta el siguiente aviso.
+**Estado:** aprobado por Miguel (2026-10-18). Pregunta 1: **Tailwind v4 + shadcn restilado**. Fases 1–5 implementadas en este PR.
 
 **Producto:** panel de indicadores para dueños y líderes de bares, discotecas y locales. Next.js 15, React 19, Recharts 3, tokens CSS propios, copy en `src/copy.ts`. Puerto 3001.
 
@@ -480,10 +480,10 @@ Asistencia por noche                         Ingresos por noche
 
 Móvil: ingresos full width; asistencia y órdenes apilados; una gráfica por vez.
 
-## Apéndice B — Alcance de este PR (fases 1–2)
+## Apéndice B — Alcance de este PR (fases 1–5)
 
-Hecho: Tailwind v4, tokens sin aliases consumidor, shadcn restilado, `DESIGN.md`, login sin chrome de producto, shell mínimo, formato COP, copy de prueba / Club de Miguel.
+Hecho: cimientos Tailwind/shadcn, login y shell, IA del panel (hero de ingresos), serie de ingresos vía `revenueFromField()`, audiencia en barras en móvil, estados carga/vacío/error, skip link, a11y de foco, copy y docs.
 
-No hecho (fases 3–5): hero de ingresos, filtros, corrección de la serie de ventas, charts, skip-link, migración del dashboard a primitivos, 404.
+No se toca: contrato de API, `src/lib/api.ts`, `src/lib/auth.tsx`, `.env`, credenciales. No hay 404 propia ni tabla por noche.
 
-No se toca: contrato de API, `src/lib/api.ts`, `src/lib/auth.tsx`, `.env`, credenciales.
+Pendiente de backend: unidad de `revenue_cents`; promedio de ingresos del sector (no existe en `GremialBenchmarks`).

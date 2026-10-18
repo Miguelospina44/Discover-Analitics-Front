@@ -1,10 +1,10 @@
 # DISCOVER Analytics — Design System
 
-Tema **oscuro ejecutivo** para un producto de datos: canvas grafito, superficies planas y un acento champagne contenido. Usuarios = dueños y líderes. Menos ruido que Discover consumidor.
+Tema **oscuro ejecutivo** para un producto de datos: canvas grafito, superficies planas y un acento champagne contenido. Usuarios = dueños y líderes.
 
-Implementación: Tailwind v4 + shadcn/ui restilado a estos tokens (`src/components/ui`, `DESIGN.md`). El login no lleva header de producto. Cifras de ingresos: `es-CO` + sufijo `COP`, sin notación compacta.
+Implementación: Tailwind v4 + shadcn/ui restilado (`src/components/ui`, `DESIGN.md`). Login sin header. Cifras: `es-CO` + `COP`. Ingresos pasan por `revenueFromField()`; no se divide entre 100 hasta confirmar el contrato.
 
-Criterio visual: skill `design-taste-frontend` (Leonxlnx/taste-skill, commit `f624f37a8c650b9cc550253104925efe4c8de246`), adaptada a un panel (no a una landing). Diales: variación baja, movimiento sutil, densidad media. Sin fotos decorativas, sin emojis, un solo set de íconos (Phosphor, peso regular).
+Criterio visual: skill `design-taste-frontend` adaptada a un panel (no a una landing). Variación baja, movimiento sutil, densidad media. Phosphor Regular. Sin emojis.
 
 ## Color
 
@@ -21,34 +21,29 @@ Criterio visual: skill `design-taste-frontend` (Leonxlnx/taste-skill, commit `f6
 
 Series: `#C9A86D` → `#6B8CAE` → `#7FA885` → `#9B869B`. Alerta `#C67B6B`. Positivo `#7FA885`.
 
-El acento ocupa poco de cada pantalla. El resto es tono: graphite / steel / pearl.
-
 ## Superficies
 
-Sin vidrio, sin sombras en reposo, sin degradados ni orbes. Una superficie se distingue del lienzo por un paso de tono (`--color-surface`). Radio **0.5rem**. El CTA es champagne plano.
-
-Header: `.shell-header` sólido night. Fondo: `.app-backdrop` graphite plano.
+Sin vidrio, sin sombras en reposo, sin degradados. Radio **8px**. Header `.shell-header` night. Skip link champagne al foco.
 
 ## Tipografía
 
 - **Blogh** — solo el wordmark DISCOVER.
-- **ZT Glora Pro** — toda la UI. Títulos de sección en frase (no versales).
-- Escala corta: small 13px, body 17px, lead 20px, título de página ~34px, KPI fluido.
-- Cifras: `tabular-nums`.
+- **ZT Glora Pro** — toda la UI. Títulos en frase.
+- Escala: 13 / 16 / 20 / 28 / 40 (KPI hero). Móvil: H1 ~26px.
+- Cifras: `tabular-nums`. Periodo: `1–14 ago 2026`.
 
-## Componentes
+## Panel
 
-- **KPI**: tres cifras (ingresos, asistencia, órdenes). Label sentence-case, cifra grande.
-- **Filtros**: chips en graphite; activo = slate. Champagne no se usa en chips.
-- **Gráficas**: ejes cloud, grid muy suave (funcional, no decorativo), tooltip steel.
-- **Carga**: skeleton con la forma del panel.
-- **Vacío / error**: explicación + siguiente paso. Ícono Phosphor único.
-- **Ejemplo**: banner “datos de ejemplo” cuando se entra con *Ver un panel de ejemplo*.
+- **KPIs:** hero ingresos a la izquierda (≥1080) o arriba; asistencia y órdenes al lado. Una pista cada uno (periodo o vs sector). Nunca repetir el nombre del negocio.
+- **Sector:** dos cifras planas (asistencia y órdenes). Sin promedio de ingresos: el contrato no lo envía.
+- **Filtros:** periodo nativo, ToggleGroup de local; cliente solo `super_admin`; audiencia secundaria.
+- **Gráficas:** asistencia e ingresos por noche (`revenue_cents` convertido); audiencia donut en desktop y barras en móvil. Tooltip con unidad. `accessibilityLayer`.
+- **Estados:** skeleton con forma de panel; vacío con siguiente paso; error con reintentar; demo etiquetado.
 
 ## Motion
 
-Solo `opacity` y `transform`. Hover/pressed en botones, pulso del skeleton. `prefers-reduced-motion: reduce` apaga animaciones.
+Solo `opacity` y `transform`. `prefers-reduced-motion: reduce` apaga animaciones.
 
 ## Copy
 
-Español ejecutivo, usted/su. Fuente: [`src/copy.ts`](../src/copy.ts). Guía: [`docs/voice-and-tone.md`](voice-and-tone.md).
+Español ejecutivo, usted/su. Fuente: [`src/copy.ts`](../src/copy.ts). Guía: [`voice-and-tone.md`](voice-and-tone.md).

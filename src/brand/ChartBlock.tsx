@@ -10,29 +10,9 @@ export function ChartBlock({
   children: ReactNode;
 }) {
   return (
-    <section className="surface-card" style={{ padding: "1.6rem 1.45rem", marginBottom: "1.35rem" }}>
-      <h2
-        className="font-glora"
-        style={{
-          color: "var(--color-ink)",
-          fontSize: "var(--step-lead)",
-          fontWeight: 400,
-          letterSpacing: "-0.02em",
-          margin: "0 0 0.4rem",
-          lineHeight: 1.3,
-        }}
-      >
-        {title}
-      </h2>
-      <p
-        className="font-glora"
-        style={{
-          color: "var(--color-muted)",
-          margin: "0 0 1.4rem",
-          fontSize: "var(--step-small)",
-          lineHeight: 1.5,
-        }}
-      >
+    <section className="surface-card mb-6 px-6 py-6">
+      <h2 className="page-section-title">{title}</h2>
+      <p className="mb-5 mt-1.5 max-w-[42rem] text-[length:var(--step-small)] leading-relaxed text-muted-foreground">
         {definition}
       </p>
       {children}

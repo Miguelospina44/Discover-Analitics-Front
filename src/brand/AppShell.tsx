@@ -28,6 +28,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="relative min-h-dvh bg-background">
       <div className="app-backdrop" aria-hidden />
       <div className="shell-content">
+        <a className="skip-link" href="#contenido">
+          {copy.skipToContent}
+        </a>
         <header className="shell-header sticky top-0 z-20 flex items-center justify-between gap-4 px-[var(--space-page)] py-[0.9rem]">
           <Link href="/" className="text-inherit no-underline">
             <DiscoverLogo variant="compact" />
