@@ -34,7 +34,7 @@ Champagne &lt; 5 % de cada pantalla. Sin `$` de dólar: cifras `45.830.000 COP`.
 ## Superficies del MVP
 
 - `/login`: sin header ni footer de producto. Wordmark + formulario + ejemplo.
-- `/`: skip link, header (logo, cuenta en desktop, Cerrar sesión). Hero de ingresos + asistencia y órdenes. Sector plano (asistencia y órdenes). Dos series por noche + audiencia al final.
+- `/`: skip link, header (logo, cuenta en desktop, Cerrar sesión). Hero de ingresos + asistencia y órdenes. Sector plano (asistencia y órdenes). Dos series por noche + audiencia (género y género × edad) al final.
 - Cuentas de prueba en login solo fuera de producción.
 - Ingresos: `revenueFromField()` en `src/lib/metrics.ts` (identidad hasta confirmar el contrato). No hay promedio de ingresos del sector en el API.
 

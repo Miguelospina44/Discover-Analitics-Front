@@ -37,7 +37,7 @@ Sin vidrio, sin sombras en reposo, sin degradados. Radio **8px**. Header `.shell
 - **KPIs:** hero ingresos a la izquierda (≥1080) o arriba; asistencia y órdenes al lado. Una pista cada uno (periodo o vs sector). Nunca repetir el nombre del negocio.
 - **Sector:** dos cifras planas (asistencia y órdenes). Sin promedio de ingresos: el contrato no lo envía.
 - **Filtros:** periodo nativo, ToggleGroup de local; cliente solo `super_admin`; audiencia secundaria.
-- **Gráficas:** asistencia e ingresos por noche (`revenue_cents` convertido); audiencia donut en desktop y barras en móvil. Tooltip con unidad. `accessibilityLayer`.
+- **Gráficas:** asistencia e ingresos por noche (`revenue_cents` convertido); audiencia donut en desktop y barras en móvil; género × edad en barras agrupadas (escritorio) y apiladas horizontales (móvil). Tooltip con unidad. `accessibilityLayer`.
 - **Estados:** skeleton con forma de panel; vacío con siguiente paso; error con reintentar; demo etiquetado.
 
 ## Motion

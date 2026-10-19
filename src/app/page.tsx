@@ -9,7 +9,8 @@ import { EmptyState } from "@/brand/EmptyState";
 import { FilterBar } from "@/brand/FilterBar";
 import { KpiStat } from "@/brand/KpiStat";
 import { SectorCompare } from "@/brand/SectorCompare";
-import { DashboardSkeleton } from "@/brand/Skeleton";
+import { ChartSkeleton, DashboardSkeleton } from "@/brand/Skeleton";
+import type { AudiencePanelState } from "@/brand/AudienceGenderAgeBlock";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { copy } from "@/copy";
@@ -17,6 +18,10 @@ import { copy } from "@/copy";
 const GenderMixChart = dynamic(
   () => import("@/brand/charts/GenderMixChart").then((m) => m.GenderMixChart),
   { ssr: false },
+);
+const AudienceGenderAgeBlock = dynamic(
+  () => import("@/brand/AudienceGenderAgeBlock").then((m) => m.AudienceGenderAgeBlock),
+  { ssr: false, loading: () => <ChartSkeleton /> },
 );
 const NightlyAttendanceChart = dynamic(
   () =>
@@ -30,6 +35,7 @@ const SalesByNightChart = dynamic(
 import {
   fetchAccounts,
   fetchAttendanceByGender,
+  fetchAudienceByGenderAgeOrFallback,
   fetchGremialBenchmarks,
   fetchNightlyAttendance,
   fetchSalesByNight,
@@ -39,6 +45,8 @@ import { useAuth } from "@/lib/auth";
 import {
   DEMO_ACCOUNTS,
   DEMO_ATTENDANCE,
+  DEMO_AUDIENCE_GENDER_AGE,
+  DEMO_AUDIENCE_GENDER_AGE_PRIVACY,
   DEMO_BENCH,
   DEMO_EMPTY_ATTENDANCE,
   DEMO_EMPTY_SALES,
@@ -69,10 +77,18 @@ import {
   type VenueOut,
 } from "@/lib/types";
 
-type Vista = "datos" | "vacio" | "carga" | "error";
+type Vista = "datos" | "vacio" | "carga" | "error" | "privacidad" | "restringido";
 
 function readVista(raw: string | null): Vista {
-  if (raw === "vacio" || raw === "carga" || raw === "error") return raw;
+  if (
+    raw === "vacio" ||
+    raw === "carga" ||
+    raw === "error" ||
+    raw === "privacidad" ||
+    raw === "restringido"
+  ) {
+    return raw;
+  }
   return "datos";
 }
 
@@ -126,10 +142,12 @@ function HomePage() {
   const [sales, setSales] = useState<SalesMeasure | null>(null);
   const [genderMeasure, setGenderMeasure] = useState<GenderMeasure | null>(null);
   const [bench, setBench] = useState<GremialBenchmarks | null>(null);
+  const [audience, setAudience] = useState<AudiencePanelState>({ status: "loading" });
   const [bootLoading, setBootLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const hasMetricsRef = useRef(false);
+  const hasAudienceRef = useRef(false);
 
   const signedIn = Boolean(token || isDemo);
 
@@ -157,10 +175,46 @@ function HomePage() {
       setSales(DEMO_SALES);
       setError(null);
     }
+    if (mode === "privacidad") {
+      setAudience({ status: "ready", data: DEMO_AUDIENCE_GENDER_AGE_PRIVACY });
+    } else if (mode === "restringido") {
+      setAudience({ status: "restricted" });
+    } else {
+      setAudience({ status: "ready", data: DEMO_AUDIENCE_GENDER_AGE });
+    }
     hasMetricsRef.current = true;
+    hasAudienceRef.current = true;
     setBootLoading(mode === "carga");
     setRefreshing(false);
   }, []);
+
+  const loadAudience = useCallback(async () => {
+    if (!me || isDemo || !token) return;
+    if (!hasAudienceRef.current) setAudience({ status: "loading" });
+    try {
+      const result = await fetchAudienceByGenderAgeOrFallback(token, {
+        period,
+        accountId: showClientPicker ? accountId : undefined,
+        venueId,
+      });
+      if (result.status === "restricted") {
+        setAudience({ status: "restricted" });
+      } else {
+        setAudience({ status: "ready", data: result.data });
+      }
+      hasAudienceRef.current = true;
+    } catch (err) {
+      if (err instanceof ApiError && err.status === 401) {
+        logout();
+        router.replace("/login");
+        return;
+      }
+      setAudience({
+        status: "error",
+        message: err instanceof ApiError ? err.message : copy.charts.genderAge.error,
+      });
+    }
+  }, [me, isDemo, token, period, showClientPicker, accountId, venueId, logout, router]);
 
   const load = useCallback(async () => {
     if (!me) return;
@@ -173,6 +227,7 @@ function HomePage() {
     if (soft) setRefreshing(true);
     else setBootLoading(true);
     setError(null);
+    const audienceTask = loadAudience();
     try {
       const query = {
         period,
@@ -210,12 +265,14 @@ function HomePage() {
       setBootLoading(false);
       setRefreshing(false);
     }
+    await audienceTask;
   }, [
     token,
     me,
     isDemo,
     vista,
     applyDemo,
+    loadAudience,
     period,
     accountId,
     venueId,
@@ -450,6 +507,7 @@ function HomePage() {
                   />
                 </ChartBlock>
               ) : null}
+              <AudienceGenderAgeBlock state={audience} onRetry={() => void loadAudience()} />
             </>
           )}
         </div>

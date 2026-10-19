@@ -1,7 +1,9 @@
+import { DEMO_AUDIENCE_GENDER_AGE } from "./demo-data";
 import {
   ApiError,
   type AccountOut,
   type AttendanceMeasure,
+  type AudienceGenderAgeMeasure,
   type GenderMeasure,
   type GremialBenchmarks,
   type MeResponse,
@@ -50,6 +52,7 @@ export type MetricQuery = {
   accountId?: string | null;
   venueId?: string | null;
   gender?: string | null;
+  eventId?: string | null;
 };
 
 function metricQs(q: MetricQuery, opts?: { includeGender?: boolean }): URLSearchParams {
@@ -109,6 +112,47 @@ export async function fetchSalesByNight(
   });
   if (!res.ok) await parseError(res);
   return res.json() as Promise<SalesMeasure>;
+}
+
+export async function fetchAudienceByGenderAge(
+  token: string,
+  query: MetricQuery,
+): Promise<AudienceGenderAgeMeasure> {
+  const qs = metricQs(query, { includeGender: false });
+  if (query.eventId) qs.set("event_id", query.eventId);
+  const res = await fetch(apiUrl(`/api/v1/metrics/audience-by-gender-age?${qs}`), {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) await parseError(res);
+  return res.json() as Promise<AudienceGenderAgeMeasure>;
+}
+
+export type AudienceFetchResult =
+  | { status: "ok"; data: AudienceGenderAgeMeasure }
+  | { status: "restricted" }
+  | { status: "fallback"; data: AudienceGenderAgeMeasure };
+
+function shouldUseAudienceFallback(err: unknown): boolean {
+  if (err instanceof ApiError) return err.status === 404 || err.status === 501;
+  return true;
+}
+
+/** Isolated fetch: 403 stays on this chart; missing endpoint falls back to labeled seed. */
+export async function fetchAudienceByGenderAgeOrFallback(
+  token: string,
+  query: MetricQuery,
+): Promise<AudienceFetchResult> {
+  try {
+    const data = await fetchAudienceByGenderAge(token, query);
+    return { status: "ok", data };
+  } catch (err) {
+    if (err instanceof ApiError && err.status === 403) return { status: "restricted" };
+    if (err instanceof ApiError && err.status === 401) throw err;
+    if (shouldUseAudienceFallback(err)) {
+      return { status: "fallback", data: DEMO_AUDIENCE_GENDER_AGE };
+    }
+    throw err;
+  }
 }
 
 export async function fetchAttendanceByGender(
