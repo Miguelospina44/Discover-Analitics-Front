@@ -1,18 +1,18 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-  type ReactNode,
-} from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Info, WarningCircle } from "@phosphor-icons/react";
+import { ChartBlock } from "@/brand/ChartBlock";
 import { EmptyState } from "@/brand/EmptyState";
-import { DiscoverLogo } from "@/brand/DiscoverLogo";
 import { FilterBar } from "@/brand/FilterBar";
+import { KpiStat } from "@/brand/KpiStat";
+import { SectorCompare } from "@/brand/SectorCompare";
+import { DashboardSkeleton } from "@/brand/Skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { copy } from "@/copy";
 
 const GenderMixChart = dynamic(
   () => import("@/brand/charts/GenderMixChart").then((m) => m.GenderMixChart),
@@ -36,11 +36,25 @@ import {
   fetchVenues,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import {
+  DEMO_ACCOUNTS,
+  DEMO_ATTENDANCE,
+  DEMO_BENCH,
+  DEMO_EMPTY_ATTENDANCE,
+  DEMO_EMPTY_SALES,
+  DEMO_GENDER,
+  DEMO_SALES,
+  DEMO_VENUES,
+} from "@/lib/demo-data";
 import { useFilters, type GenderFilter } from "@/lib/filters";
 import {
-  formatMoney,
+  formatAverage,
+  formatCount,
+  formatPeriodRange,
+  formatRevenueFromField,
   pivotAttendanceByNight,
   pivotSalesByNight,
+  sectorDeltaPercent,
   sumOrders,
   sumRedeemed,
   sumRevenueCents,
@@ -55,8 +69,44 @@ import {
   type VenueOut,
 } from "@/lib/types";
 
-export default function HomePage() {
-  const { token, me, ready, isSuperAdmin, logout } = useAuth();
+type Vista = "datos" | "vacio" | "carga" | "error";
+
+function readVista(raw: string | null): Vista {
+  if (raw === "vacio" || raw === "carga" || raw === "error") return raw;
+  return "datos";
+}
+
+function deltaHint(own: number | null, sector: number | null): {
+  text: string;
+  tone: "up" | "down" | "muted";
+} {
+  const pct = sectorDeltaPercent(own, sector);
+  if (pct == null || sector == null) {
+    return { text: copy.dashboard.sector.hint, tone: "muted" };
+  }
+  const abs = Math.abs(pct).toLocaleString("es-CO", { maximumFractionDigits: 0 });
+  if (pct >= 0) {
+    return { text: copy.dashboard.kpis.vsSectorAbove(abs), tone: "up" };
+  }
+  return { text: copy.dashboard.kpis.vsSectorBelow(abs), tone: "down" };
+}
+
+export default function Page() {
+  return (
+    <Suspense
+      fallback={
+        <main id="contenido" className="page-wrap" tabIndex={-1}>
+          <DashboardSkeleton />
+        </main>
+      }
+    >
+      <HomePage />
+    </Suspense>
+  );
+}
+
+function HomePage() {
+  const { token, me, ready, isSuperAdmin, isDemo, logout } = useAuth();
   const {
     period,
     accountId,
@@ -64,8 +114,12 @@ export default function HomePage() {
     gender,
     toggleVenueId,
     toggleGender,
+    clear,
+    hasActiveFilters,
   } = useFilters();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const vista = readVista(searchParams.get("vista"));
   const [accounts, setAccounts] = useState<AccountOut[]>([]);
   const [venues, setVenues] = useState<VenueOut[]>([]);
   const [attendance, setAttendance] = useState<AttendanceMeasure | null>(null);
@@ -77,14 +131,44 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const hasMetricsRef = useRef(false);
 
+  const signedIn = Boolean(token || isDemo);
+
   useEffect(() => {
-    if (ready && !token) router.replace("/login");
-  }, [ready, token, router]);
+    if (ready && !signedIn) router.replace("/login");
+  }, [ready, signedIn, router]);
 
   const showClientPicker = me?.role === "super_admin" && isSuperAdmin;
 
+  const applyDemo = useCallback((mode: Vista) => {
+    setAccounts(DEMO_ACCOUNTS);
+    setVenues(DEMO_VENUES);
+    setBench(DEMO_BENCH);
+    setGenderMeasure(DEMO_GENDER);
+    if (mode === "vacio") {
+      setAttendance(DEMO_EMPTY_ATTENDANCE);
+      setSales(DEMO_EMPTY_SALES);
+      setError(null);
+    } else if (mode === "error") {
+      setAttendance(null);
+      setSales(null);
+      setError(copy.errors.metrics);
+    } else {
+      setAttendance(DEMO_ATTENDANCE);
+      setSales(DEMO_SALES);
+      setError(null);
+    }
+    hasMetricsRef.current = true;
+    setBootLoading(mode === "carga");
+    setRefreshing(false);
+  }, []);
+
   const load = useCallback(async () => {
-    if (!token || !me) return;
+    if (!me) return;
+    if (isDemo) {
+      applyDemo(vista);
+      return;
+    }
+    if (!token) return;
     const soft = hasMetricsRef.current;
     if (soft) setRefreshing(true);
     else setBootLoading(true);
@@ -121,11 +205,7 @@ export default function HomePage() {
         router.replace("/login");
         return;
       }
-      setError(
-        err instanceof ApiError
-          ? err.message
-          : "No pudimos traer las métricas. Reintentá en un toque.",
-      );
+      setError(err instanceof ApiError ? err.message : copy.errors.metrics);
     } finally {
       setBootLoading(false);
       setRefreshing(false);
@@ -133,6 +213,9 @@ export default function HomePage() {
   }, [
     token,
     me,
+    isDemo,
+    vista,
+    applyDemo,
     period,
     accountId,
     venueId,
@@ -143,8 +226,8 @@ export default function HomePage() {
   ]);
 
   useEffect(() => {
-    if (ready && token && me) void load();
-  }, [ready, token, me, load]);
+    if (ready && signedIn && me) void load();
+  }, [ready, signedIn, me, load]);
 
   const venueNameById = useMemo(() => {
     const map: Record<string, string> = {};
@@ -152,45 +235,54 @@ export default function HomePage() {
     return map;
   }, [venues]);
 
+  const attendancePoints = useMemo(() => {
+    if (!attendance) return [];
+    return venueId ? attendance.points.filter((p) => p.venue_id === venueId) : attendance.points;
+  }, [attendance, venueId]);
+
+  const salesPoints = useMemo(() => {
+    if (!sales) return [];
+    return venueId ? sales.points.filter((p) => p.venue_id === venueId) : sales.points;
+  }, [sales, venueId]);
+
   const attendancePivot = useMemo(() => {
     if (!attendance) return null;
-    const pivot = pivotAttendanceByNight(attendance.points);
+    const pivot = pivotAttendanceByNight(attendancePoints);
     const venueLabels = { ...pivot.venueLabels };
     for (const [key, id] of Object.entries(pivot.venueIdByKey)) {
       if (venueNameById[id]) venueLabels[key] = venueNameById[id];
     }
     return { ...pivot, venueLabels };
-  }, [attendance, venueNameById]);
+  }, [attendance, attendancePoints, venueNameById]);
 
   const salesPivot = useMemo(() => {
     if (!sales) return null;
-    const pivot = pivotSalesByNight(sales.points);
+    const pivot = pivotSalesByNight(salesPoints);
     const venueLabels = { ...pivot.venueLabels };
     for (const [key, id] of Object.entries(pivot.venueIdByKey)) {
       if (venueNameById[id]) venueLabels[key] = venueNameById[id];
     }
     return { ...pivot, venueLabels };
-  }, [sales, venueNameById]);
+  }, [sales, salesPoints, venueNameById]);
 
-  if (!ready || !token || !me) {
+  if (!ready || !signedIn || !me) {
     return (
-      <main style={{ padding: "3rem 1.5rem", textAlign: "center" }}>
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)" }}>
-          Cargando el parche…
-        </p>
+      <main id="contenido" className="page-wrap" tabIndex={-1}>
+        <p className="page-kicker">{copy.loading}</p>
+        <DashboardSkeleton />
       </main>
     );
   }
 
-  const tickets = attendance ? sumRedeemed(attendance.points) : 0;
-  const orders = sales ? sumOrders(sales.points) : 0;
-  const revenue = sales ? sumRevenueCents(sales.points) : 0;
-  const source = attendance?.data_source ?? sales?.data_source ?? "—";
+  const tickets = attendance ? sumRedeemed(attendancePoints) : 0;
+  const orders = sales ? sumOrders(salesPoints) : 0;
+  const revenueCents = sales ? sumRevenueCents(salesPoints) : 0;
+  const periodLabel = formatPeriodRange(period.start, period.end);
   const scopeLabel = showClientPicker
     ? accountId
-      ? accounts.find((a) => a.id === accountId)?.name ?? "cliente"
-      : "global"
-    : me.account_name ?? "tu club";
+      ? (accounts.find((a) => a.id === accountId)?.name ?? copy.dashboard.scopeClient)
+      : copy.dashboard.scopeGlobal
+    : (me.account_name ?? copy.dashboard.scopeBusiness);
 
   const empty =
     !bootLoading &&
@@ -203,158 +295,123 @@ export default function HomePage() {
       sales.points.length === 0 ||
       sales.data_quality === "missing");
 
+  const nightsCount = attendancePivot?.rows.length ?? 0;
+  const venueCount = Math.max(
+    new Set(attendancePoints.map((p) => p.venue_id)).size || venues.length || 1,
+    1,
+  );
+  const avgAttendance = nightsCount > 0 ? tickets / venueCount / nightsCount : null;
+  const avgOrders = nightsCount > 0 ? orders / venueCount / nightsCount : null;
+  const attendanceDelta = deltaHint(avgAttendance, bench?.avg_tickets_per_venue_night ?? null);
+  const ordersDelta = deltaHint(avgOrders, bench?.avg_orders_per_venue_night ?? null);
+
   const onToggleGender = (g: string) => {
     toggleGender(g as NonNullable<GenderFilter>);
   };
 
   return (
-    <main style={{ maxWidth: 1040, margin: "0 auto", padding: "2.5rem 1.5rem 4rem" }}>
-      <section style={{ marginBottom: "1.5rem" }}>
-        <DiscoverLogo variant="primary" />
-        <p
-          className="font-glora-l"
-          style={{
-            color: "var(--discover-ink-soft)",
-            maxWidth: 560,
-            marginTop: "1.25rem",
-            fontSize: "1.05rem",
-            lineHeight: 1.55,
-            fontStyle: "italic",
-            fontWeight: 300,
-          }}
-        >
-          {isSuperAdmin
-            ? "Vista gremial: todos los clientes y el pulso global."
-            : `Tu parche: ${me.account_name ?? "cliente"}. Lo tuyo + el promedio anónimo del gremio.`}
-        </p>
-        <p className="font-glora-xl" style={{ color: "var(--discover-storm)", marginTop: "0.75rem" }}>
-          {period.start} → {period.end}
-          {" · "}
-          <span style={{ color: "var(--discover-obsidian)", fontWeight: 400 }}>{scopeLabel}</span>
-          {" · "}
-          {source}
-          {refreshing ? " · actualizando…" : ""}
-        </p>
-      </section>
+    <main id="contenido" className="page-wrap" tabIndex={-1} aria-label={copy.main}>
+      <h1 className="page-title">{copy.dashboard.title}</h1>
+      <p className="page-lead">
+        {isSuperAdmin ? copy.dashboard.introAdmin : copy.dashboard.introOwner}
+      </p>
+      <div className="meta-row">
+        <span>{periodLabel}</span>
+        <span>{scopeLabel}</span>
+        {refreshing ? <span>{copy.refreshing}</span> : null}
+      </div>
 
-      <FilterBar
-        isSuperAdmin={Boolean(showClientPicker)}
-        accounts={accounts}
-        venues={venues}
-      />
+      {isDemo ? (
+        <Alert className="mt-6 mb-6" role="status">
+          <Info size={16} weight="regular" aria-hidden />
+          <AlertDescription>{copy.demo.banner}</AlertDescription>
+        </Alert>
+      ) : (
+        <div className="h-6" />
+      )}
 
-      {bootLoading && !attendance ? (
-        <p className="font-glora-l" style={{ color: "var(--discover-storm)", marginBottom: "2rem" }}>
-          Cargando el parche…
-        </p>
-      ) : null}
+      <FilterBar isSuperAdmin={Boolean(showClientPicker)} accounts={accounts} venues={venues} />
+
+      {bootLoading ? <DashboardSkeleton /> : null}
 
       {error ? (
-        <div className="surface-card" style={{ padding: "1.5rem", marginBottom: "2rem" }}>
-          <p className="font-glora" style={{ color: "var(--discover-tomato)", marginBottom: "1rem" }}>
-            {error}
-          </p>
-          <button type="button" className="btn-discover" onClick={() => void load()}>
-            Reintentar
-          </button>
-        </div>
+        <Alert variant="destructive" className="mb-8">
+          <WarningCircle size={16} weight="regular" aria-hidden />
+          <AlertDescription className="text-destructive">
+            <span className="block mb-3">{error}</span>
+            <Button type="button" onClick={() => void load()}>
+              {copy.retry}
+            </Button>
+          </AlertDescription>
+        </Alert>
       ) : null}
 
-      {!error && attendance && sales ? (
-        <div
-          className={refreshing ? "metrics-refreshing" : undefined}
-          style={{ opacity: refreshing ? 0.72 : 1, transition: "opacity 120ms ease" }}
-        >
-          <section
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 160px), 1fr))",
-              gap: "1rem",
-              marginBottom: "2.5rem",
-            }}
-          >
-            <KpiCard label="Tickets redimidos" value={String(tickets)} hint={scopeLabel} />
-            <KpiCard label="Órdenes" value={String(orders)} hint={scopeLabel} />
-            <KpiCard label="Revenue" value={formatMoney(revenue)} hint={scopeLabel} />
-            <KpiCard
-              label="% Mujer"
-              value={pct(genderMeasure?.points.find((p) => p.gender === "woman")?.share)}
-              hint={scopeLabel}
+      {!error && !bootLoading && attendance && sales ? (
+        <div className={refreshing ? "opacity-80 transition-opacity duration-[var(--dur-fast)]" : ""}>
+          <section className="kpi-stage mb-10" aria-label={copy.dashboard.title}>
+            <KpiStat
+              hero
+              label={copy.dashboard.kpis.revenue}
+              value={formatRevenueFromField(revenueCents)}
+              hint={periodLabel}
             />
-            <KpiCard
-              label="% Hombre"
-              value={pct(genderMeasure?.points.find((p) => p.gender === "man")?.share)}
-              hint={scopeLabel}
+            <KpiStat
+              label={copy.dashboard.kpis.attendance}
+              value={formatCount(tickets)}
+              hint={
+                avgAttendance != null
+                  ? copy.dashboard.kpis.perNight(formatAverage(avgAttendance))
+                  : periodLabel
+              }
+            />
+            <KpiStat
+              label={copy.dashboard.kpis.orders}
+              value={formatCount(orders)}
+              hint={
+                avgOrders != null
+                  ? copy.dashboard.kpis.perNight(formatAverage(avgOrders))
+                  : periodLabel
+              }
             />
           </section>
 
-          {bench ? (
-            <section className="surface-card" style={{ padding: "1.5rem 1.25rem", marginBottom: "1.75rem" }}>
-              <h2
-                className="font-blogh"
-                style={{ color: "var(--discover-obsidian)", fontSize: "0.95rem", margin: "0 0 0.5rem" }}
-              >
-                El parche gremial
-              </h2>
-              <p className="font-glora-xl" style={{ color: "var(--discover-storm)", margin: "0 0 1.25rem", fontSize: "0.8rem" }}>
-                {bench.note}
-              </p>
-              <div
-                style={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 140px), 1fr))",
-                  gap: "1rem",
-                }}
-              >
-                <KpiCard
-                  label="Avg tickets / noche"
-                  value={fmtNum(bench.avg_tickets_per_venue_night)}
-                  hint="anónimo"
-                />
-                <KpiCard
-                  label="Mediana tickets"
-                  value={fmtNum(bench.median_tickets_per_venue_night)}
-                  hint="anónimo"
-                />
-                <KpiCard
-                  label="Avg órdenes / noche"
-                  value={fmtNum(bench.avg_orders_per_venue_night)}
-                  hint="anónimo"
-                />
-                <KpiCard
-                  label="Cuentas en muestra"
-                  value={String(bench.accounts_in_sample)}
-                  hint={`${bench.nights_in_sample} noches`}
-                />
-                <KpiCard label="Gremial % Mujer" value={pct(bench.share_woman)} hint="anónimo" />
-                <KpiCard label="Gremial % Hombre" value={pct(bench.share_man)} hint="anónimo" />
-              </div>
-            </section>
+          {bench && !empty ? (
+            <SectorCompare
+              attendance={{
+                label: copy.dashboard.sector.attendance,
+                value: formatAverage(avgAttendance ?? bench.avg_tickets_per_venue_night),
+                hint: attendanceDelta.text,
+                tone: attendanceDelta.tone,
+              }}
+              orders={{
+                label: copy.dashboard.sector.orders,
+                value: formatAverage(avgOrders ?? bench.avg_orders_per_venue_night),
+                hint: ordersDelta.text,
+                tone: ordersDelta.tone,
+              }}
+            />
           ) : null}
 
           {empty ? (
             <EmptyState
-              title="Aquí va a estar el parche"
-              body="Cuando haya data del estudio, los hallazgos salen acá."
+              title={copy.dashboard.empty.title}
+              body={copy.dashboard.empty.body}
               action={
-                <button type="button" className="btn-discover" onClick={() => void load()}>
-                  Reintentar
-                </button>
+                hasActiveFilters ? (
+                  <Button type="button" variant="secondary" onClick={clear}>
+                    {copy.filters.clear}
+                  </Button>
+                ) : (
+                  <Button type="button" onClick={() => void load()}>
+                    {copy.retry}
+                  </Button>
+                )
               }
             />
           ) : (
             <>
-              {genderMeasure && genderMeasure.points.length > 0 ? (
-                <ChartBlock title={genderMeasure.title} definition={genderMeasure.definition}>
-                  <GenderMixChart
-                    points={genderMeasure.points}
-                    activeGender={gender}
-                    onToggleGender={onToggleGender}
-                  />
-                </ChartBlock>
-              ) : null}
               {attendancePivot ? (
-                <ChartBlock title={attendance.title} definition={attendance.definition}>
+                <ChartBlock title={copy.charts.attendance.title} definition={copy.charts.attendance.definition}>
                   <NightlyAttendanceChart
                     rows={attendancePivot.rows}
                     venueKeys={attendancePivot.venueKeys}
@@ -367,27 +424,13 @@ export default function HomePage() {
               ) : null}
               {salesPivot ? (
                 <ChartBlock
-                  title={sales.title}
+                  title={copy.charts.sales.title}
                   definition={
                     gender
-                      ? `${sales.definition} Ventas aún sin dimensión de género.`
-                      : sales.definition
+                      ? `${copy.charts.sales.definition} ${copy.dashboard.salesGenderNote}`
+                      : copy.charts.sales.definition
                   }
                 >
-                  {gender ? (
-                    <p
-                      className="font-glora-xl"
-                      style={{
-                        color: "var(--discover-storm)",
-                        margin: "0 0 1rem",
-                        fontSize: "0.85rem",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      Ventas aún sin dimensión de género — el filtro de género no aplica a este
-                      visual.
-                    </p>
-                  ) : null}
                   <SalesByNightChart
                     rows={salesPivot.rows}
                     venueKeys={salesPivot.venueKeys}
@@ -398,78 +441,19 @@ export default function HomePage() {
                   />
                 </ChartBlock>
               ) : null}
+              {genderMeasure && genderMeasure.points.length > 0 ? (
+                <ChartBlock title={copy.charts.gender.title} definition={copy.charts.gender.definition}>
+                  <GenderMixChart
+                    points={genderMeasure.points}
+                    activeGender={gender}
+                    onToggleGender={onToggleGender}
+                  />
+                </ChartBlock>
+              ) : null}
             </>
           )}
         </div>
       ) : null}
     </main>
-  );
-}
-
-function fmtNum(n: number | null | undefined): string {
-  if (n == null) return "—";
-  return n.toFixed(1);
-}
-
-function pct(n: number | null | undefined): string {
-  if (n == null) return "—";
-  return `${(n * 100).toFixed(0)}%`;
-}
-
-function KpiCard({ label, value, hint }: { label: string; value: string; hint: string }) {
-  return (
-    <article className="surface-card" style={{ padding: "1.25rem 1.1rem", minWidth: 0 }}>
-      <div className="kpi-label" style={{ marginBottom: "0.65rem", fontSize: "0.75rem" }}>
-        {label}
-      </div>
-      <div
-        className="kpi-number"
-        title={value}
-        style={{ fontSize: value.length > 10 ? "1.15rem" : "clamp(1.35rem, 3.5vw, 1.85rem)" }}
-      >
-        {value}
-      </div>
-      <div
-        className="font-glora-xl"
-        style={{
-          marginTop: "0.5rem",
-          fontSize: "0.8rem",
-          color: "var(--discover-storm)",
-          overflow: "hidden",
-          textOverflow: "ellipsis",
-          whiteSpace: "nowrap",
-        }}
-      >
-        {hint}
-      </div>
-    </article>
-  );
-}
-
-function ChartBlock({
-  title,
-  definition,
-  children,
-}: {
-  title: string;
-  definition: string;
-  children: ReactNode;
-}) {
-  return (
-    <section className="surface-card" style={{ padding: "1.5rem 1.25rem", marginBottom: "1.75rem" }}>
-      <h2
-        className="font-blogh"
-        style={{ color: "var(--discover-obsidian)", fontSize: "0.95rem", margin: "0 0 0.5rem" }}
-      >
-        {title}
-      </h2>
-      <p
-        className="font-glora-xl"
-        style={{ color: "var(--discover-storm)", margin: "0 0 1.25rem", fontSize: "0.8rem" }}
-      >
-        {definition}
-      </p>
-      {children}
-    </section>
   );
 }

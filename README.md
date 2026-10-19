@@ -1,13 +1,17 @@
 # Discover Analytics Front
 
-UI light-first de estudios. Marca DISCOVER (Friend / “4 Friends, By Friends.”) — blanco, negro, amarillo.
+Panel ejecutivo para dueños y líderes de establecimientos. Canvas grafito, superficies planas y acento champagne.
 
 ```bash
 npm install
-copy .env.example .env.local
+cp .env.example .env.local
 npm run dev
 ```
 
-http://localhost:3001 — hub + empty state. Login look en `/login` (cable API en siguiente slice).
+http://localhost:3001 — acceso en `/login`. Para ver el panel sin API, use **Ver un panel de ejemplo** (cifras ficticias, etiquetadas como ejemplo).
 
-Design system: [docs/design-system.md](docs/design-system.md).
+Estados de revisión: `/?vista=vacio`, `/?vista=carga`, `/?vista=error` (con el ejemplo activo).
+
+- Design system: [docs/design-system.md](docs/design-system.md)
+- Voz y tono: [docs/voice-and-tone.md](docs/voice-and-tone.md)
+- Copy: [src/copy.ts](src/copy.ts)

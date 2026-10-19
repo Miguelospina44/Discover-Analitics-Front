@@ -93,12 +93,12 @@ export const DEFAULT_PERIOD: Period = {
 
 export const DEMO_LOGINS = [
   {
-    label: "Superadmin",
+    label: "Administración",
     email: "superadmin@discover.example.com",
     password: "change-me-now",
   },
   {
-    label: "Miguel's Club",
+    label: "Club de Miguel",
     email: "miguel@miguelsclub.example.com",
     password: "change-me-now",
   },

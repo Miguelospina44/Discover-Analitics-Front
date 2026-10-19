@@ -9,29 +9,49 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { copy } from "@/copy";
 import { fetchMe, login as apiLogin } from "./api";
+import { DEMO_ME } from "./demo-data";
 import { ApiError, type MeResponse } from "./types";
 
 const TOKEN_KEY = "da_access_token";
+const DEMO_KEY = "da_demo";
 
 type AuthContextValue = {
   token: string | null;
   me: MeResponse | null;
   ready: boolean;
   isSuperAdmin: boolean;
+  isDemo: boolean;
   login: (email: string, password: string) => Promise<void>;
+  enterDemo: () => void;
   logout: () => void;
   refreshMe: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+function readDemoFlag(): boolean {
+  try {
+    return localStorage.getItem(DEMO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [token, setToken] = useState<string | null>(null);
   const [me, setMe] = useState<MeResponse | null>(null);
   const [ready, setReady] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   const refreshMe = useCallback(async () => {
+    if (readDemoFlag()) {
+      setIsDemo(true);
+      setMe(DEMO_ME);
+      setToken(null);
+      return;
+    }
     const t = localStorage.getItem(TOKEN_KEY);
     if (!t) {
       setMe(null);
@@ -49,6 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     try {
+      if (readDemoFlag()) {
+        setIsDemo(true);
+        setMe(DEMO_ME);
+        setToken(null);
+        setReady(true);
+        return;
+      }
       const t = localStorage.getItem(TOKEN_KEY);
       setToken(t);
       if (t) {
@@ -71,6 +98,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string) => {
     try {
+      localStorage.removeItem(DEMO_KEY);
+      setIsDemo(false);
       const res = await apiLogin(email, password);
       localStorage.setItem(TOKEN_KEY, res.access_token);
       setToken(res.access_token);
@@ -78,19 +107,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setMe(profile);
     } catch (err) {
       if (err instanceof ApiError && (err.status === 401 || err.status === 400)) {
-        throw new ApiError(err.status, "Ese correo o clave no cuadran.");
+        throw new ApiError(err.status, copy.errors.credentials);
       }
       throw err;
     }
   }, []);
 
-  const logout = useCallback(() => {
+  const enterDemo = useCallback(() => {
     try {
       localStorage.removeItem(TOKEN_KEY);
+      localStorage.setItem(DEMO_KEY, "1");
     } catch {
       /* ignore */
     }
     setToken(null);
+    setIsDemo(true);
+    setMe(DEMO_ME);
+  }, []);
+
+  const logout = useCallback(() => {
+    try {
+      localStorage.removeItem(TOKEN_KEY);
+      localStorage.removeItem(DEMO_KEY);
+    } catch {
+      /* ignore */
+    }
+    setToken(null);
+    setIsDemo(false);
     setMe(null);
   }, []);
 
@@ -100,11 +143,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       me,
       ready,
       isSuperAdmin: me?.role === "super_admin",
+      isDemo,
       login,
+      enterDemo,
       logout,
       refreshMe,
     }),
-    [token, me, ready, login, logout, refreshMe],
+    [token, me, ready, isDemo, login, enterDemo, logout, refreshMe],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

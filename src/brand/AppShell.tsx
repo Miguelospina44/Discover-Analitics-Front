@@ -1,98 +1,74 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { DiscoverLogo } from "./DiscoverLogo";
+import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
+import { SignOut } from "@phosphor-icons/react";
+import { Button } from "@/components/ui/button";
+import { copy, roleLabel } from "@/copy";
 import { useAuth } from "@/lib/auth";
+import { DiscoverLogo } from "./DiscoverLogo";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { token, me, ready, logout } = useAuth();
+  const { token, me, ready, isDemo, logout } = useAuth();
+  const router = useRouter();
+  const pathname = usePathname();
+  const signedIn = Boolean((ready && token) || isDemo);
+  const isAccessScreen = pathname === "/login";
+
+  if (isAccessScreen) {
+    return (
+      <div className="relative min-h-dvh bg-[var(--bg-deep)]">
+        <div className="shell-content">{children}</div>
+      </div>
+    );
+  }
 
   return (
-    <div style={{ minHeight: "100vh" }}>
-      <div className="app-backdrop" aria-hidden>
-        <div className="bg-orbs">
-          <span className="bg-orbs__blob bg-orbs__blob--yellow" />
-          <span className="bg-orbs__blob bg-orbs__blob--plum" />
-          <span className="bg-orbs__blob bg-orbs__blob--ink" />
-          <span className="bg-orbs__blob bg-orbs__blob--fog" />
-        </div>
-      </div>
-
+    <div className="relative min-h-dvh bg-background">
+      <div className="app-backdrop" aria-hidden />
       <div className="shell-content">
-        <header
-          className="shell-header"
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "1rem",
-            padding: "1.1rem 1.5rem",
-            position: "sticky",
-            top: 0,
-            zIndex: 20,
-          }}
-        >
-          <a href="/" style={{ textDecoration: "none", borderBottom: "none" }}>
-            <DiscoverLogo variant="secondary" />
-          </a>
+        <a className="skip-link" href="#contenido">
+          {copy.skipToContent}
+        </a>
+        <header className="shell-header sticky top-0 z-20 flex items-center justify-between gap-4 px-[var(--space-page)] py-[0.9rem]">
+          <Link href="/" className="text-inherit no-underline">
+            <DiscoverLogo variant="compact" />
+          </Link>
           <nav
-            className="font-glora"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "1.25rem",
-              fontSize: "0.9rem",
-              flexWrap: "wrap",
-              justifyContent: "flex-end",
-            }}
+            className="font-glora flex flex-wrap items-center justify-end gap-3 text-[0.9rem]"
+            aria-label={copy.nav.session}
           >
             {ready && me ? (
-              <span className="font-glora-xl" style={{ color: "var(--discover-storm)", fontSize: "0.75rem" }}>
-                {me.account_name ?? "cuenta"} · {me.role}
+              <span className="shell-account">
+                {me.account_name ?? copy.nav.accountFallback}
+                {" · "}
+                {roleLabel(me.role)}
               </span>
             ) : null}
-            <a href="/" style={{ color: "var(--discover-ink)" }}>
-              Estudios
-            </a>
-            {ready && token ? (
-              <button
+            {signedIn ? (
+              <Button
                 type="button"
+                variant="secondary"
+                size="sm"
                 onClick={() => {
                   logout();
-                  window.location.href = "/login";
-                }}
-                style={{
-                  background: "none",
-                  border: "none",
-                  color: "var(--discover-storm)",
-                  fontFamily: "var(--font-ui)",
-                  fontWeight: 400,
-                  fontSize: "0.9rem",
-                  cursor: "pointer",
-                  padding: 0,
+                  router.replace("/login");
                 }}
               >
-                Salir
-              </button>
+                <SignOut size={16} weight="regular" aria-hidden />
+                {copy.nav.signOut}
+              </Button>
             ) : (
-              <a href="/login" style={{ color: "var(--discover-storm)" }}>
-                Entrar
-              </a>
+              <Link href="/login" className="text-muted-foreground">
+                {copy.nav.signIn}
+              </Link>
             )}
           </nav>
         </header>
         {children}
-        <footer
-          className="font-glora-xl"
-          style={{
-            padding: "2rem 1.5rem",
-            borderTop: "1px solid rgba(228, 226, 218, 0.8)",
-            color: "var(--discover-storm)",
-            fontSize: "0.75rem",
-            letterSpacing: "0.06em",
-          }}
-        >
-          La noche está en DISCOVER · Analytics para el parche
+        <footer className="font-glora px-[var(--space-page)] py-10 text-[length:var(--step-small)] text-muted-foreground">
+          {copy.footer}
         </footer>
       </div>
     </div>

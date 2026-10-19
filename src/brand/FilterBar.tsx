@@ -1,26 +1,19 @@
 "use client";
 
-import type { CSSProperties, MouseEvent } from "react";
-import type { AccountOut, VenueOut } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { copy, genderLabel } from "@/copy";
 import { useFilters, type GenderFilter } from "@/lib/filters";
+import type { AccountOut, VenueOut } from "@/lib/types";
 
-const GENDER_OPTS: { id: NonNullable<GenderFilter>; label: string }[] = [
-  { id: "woman", label: "Mujer" },
-  { id: "man", label: "Hombre" },
-  { id: "other", label: "Otro" },
-  { id: "undisclosed", label: "Sin dato" },
-];
+const GENDER_OPTS: NonNullable<GenderFilter>[] = ["woman", "man", "other", "undisclosed"];
 
 type Props = {
   isSuperAdmin: boolean;
   accounts: AccountOut[];
   venues: VenueOut[];
 };
-
-/** Avoid focus rectangle / scroll jump on mouse click; keep keyboard focus. */
-function hushMouseFocus(e: MouseEvent<HTMLButtonElement>) {
-  e.preventDefault();
-}
 
 export function FilterBar({ isSuperAdmin, accounts, venues }: Props) {
   const {
@@ -36,109 +29,112 @@ export function FilterBar({ isSuperAdmin, accounts, venues }: Props) {
     hasActiveFilters,
   } = useFilters();
 
-  const dateStyle: CSSProperties = {
-    padding: "0.45rem 0.75rem",
-    borderRadius: 999,
-    border: "1px solid var(--discover-obsidian)",
-    background: "rgba(255,255,255,0.7)",
-    fontFamily: "var(--font-ui)",
-    fontSize: "0.85rem",
-    color: "var(--discover-ink)",
-  };
-
   return (
-    <section className="surface-card filter-bar" style={{ padding: "1.15rem 1.25rem", marginBottom: "1.75rem" }}>
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "flex-end",
-          gap: "1rem 1.25rem",
-          justifyContent: "space-between",
-        }}
-      >
+    <section className="mb-8" aria-label={copy.filters.legend}>
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-4">
         <div>
-          <span className="scope-picker__label">Fechas</span>
-          <div style={{ display: "flex", gap: "0.5rem", flexWrap: "wrap", alignItems: "center" }}>
-            <input
+          <span className="scope-picker__label">{copy.filters.period}</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="sr-only" htmlFor="filter-from">
+              {copy.filters.from}
+            </label>
+            <Input
+              id="filter-from"
               type="date"
               value={period.start}
               onChange={(e) => setPeriod({ ...period, start: e.target.value })}
-              style={dateStyle}
-              aria-label="Desde"
+              className="input-date w-auto min-w-[10.5rem]"
             />
-            <span className="font-glora-xl" style={{ color: "var(--discover-storm)" }}>
+            <span className="text-muted-foreground" aria-hidden>
               →
             </span>
-            <input
+            <label className="sr-only" htmlFor="filter-to">
+              {copy.filters.to}
+            </label>
+            <Input
+              id="filter-to"
               type="date"
               value={period.end}
               onChange={(e) => setPeriod({ ...period, end: e.target.value })}
-              style={dateStyle}
-              aria-label="Hasta"
+              className="input-date w-auto min-w-[10.5rem]"
             />
           </div>
         </div>
         {hasActiveFilters ? (
-          <button type="button" className="scope-chip" onMouseDown={hushMouseFocus} onClick={clear}>
-            Limpiar filtros
-          </button>
+          <Button type="button" variant="ghost" size="sm" onClick={clear}>
+            {copy.filters.clear}
+          </Button>
         ) : null}
       </div>
 
       {isSuperAdmin && accounts.length > 0 ? (
-        <div className="scope-picker" style={{ marginTop: "1rem" }}>
-          <span className="scope-picker__label">Cliente</span>
-          <div className="scope-picker__chips">
+        <div className="scope-picker">
+          <span className="scope-picker__label" id="filter-client-label">
+            {copy.filters.client}
+          </span>
+          <ToggleGroup
+            type="single"
+            value={accountId ?? ""}
+            onValueChange={(value) => {
+              if (value) toggleAccountId(value);
+              else if (accountId) toggleAccountId(accountId);
+            }}
+            size="default"
+            aria-labelledby="filter-client-label"
+          >
             {accounts.map((a) => (
-              <button
-                key={a.id}
-                type="button"
-                className={`scope-chip${accountId === a.id ? " scope-chip--active" : ""}`}
-                onMouseDown={hushMouseFocus}
-                onClick={() => toggleAccountId(a.id)}
-              >
+              <ToggleGroupItem key={a.id} value={a.id}>
                 {a.name}
-              </button>
+              </ToggleGroupItem>
             ))}
-          </div>
+          </ToggleGroup>
         </div>
       ) : null}
 
       {venues.length > 0 ? (
-        <div className="scope-picker" style={{ marginTop: "1rem" }}>
-          <span className="scope-picker__label">Venue</span>
-          <div className="scope-picker__chips">
+        <div className="scope-picker">
+          <span className="scope-picker__label" id="filter-venue-label">
+            {copy.filters.venue}
+          </span>
+          <ToggleGroup
+            type="single"
+            value={venueId ?? ""}
+            onValueChange={(value) => {
+              if (value) toggleVenueId(value);
+              else if (venueId) toggleVenueId(venueId);
+            }}
+            size="default"
+            aria-labelledby="filter-venue-label"
+          >
             {venues.map((v) => (
-              <button
-                key={v.venue_id}
-                type="button"
-                className={`scope-chip${venueId === v.venue_id ? " scope-chip--active" : ""}`}
-                onMouseDown={hushMouseFocus}
-                onClick={() => toggleVenueId(v.venue_id)}
-              >
+              <ToggleGroupItem key={v.venue_id} value={v.venue_id}>
                 {v.name}
-              </button>
+              </ToggleGroupItem>
             ))}
-          </div>
+          </ToggleGroup>
         </div>
       ) : null}
 
-      <div className="scope-picker" style={{ marginTop: "1rem" }}>
-        <span className="scope-picker__label">Género</span>
-        <div className="scope-picker__chips">
+      <div className="scope-picker filter-audience">
+        <span className="scope-picker__label" id="filter-audience-label">
+          {copy.filters.audience}
+        </span>
+        <ToggleGroup
+          type="single"
+          value={gender ?? ""}
+          onValueChange={(value) => {
+            if (value) toggleGender(value as NonNullable<GenderFilter>);
+            else if (gender) toggleGender(gender);
+          }}
+          size="default"
+          aria-labelledby="filter-audience-label"
+        >
           {GENDER_OPTS.map((g) => (
-            <button
-              key={g.id}
-              type="button"
-              className={`scope-chip${gender === g.id ? " scope-chip--active" : ""}`}
-              onMouseDown={hushMouseFocus}
-              onClick={() => toggleGender(g.id)}
-            >
-              {g.label}
-            </button>
+            <ToggleGroupItem key={g} value={g}>
+              {genderLabel(g)}
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
       </div>
     </section>
   );

@@ -10,106 +10,56 @@ export type LogoVariant =
 type LogoProps = {
   variant?: LogoVariant;
   className?: string;
-  /** Prefer yellow wordmark on black; inverted only on solid yellow blocks */
   inverted?: boolean;
 };
 
-/**
- * Logo usage (brandbook):
- * A primary  — wordmark + tagline (splash, login, PDF cover, big empty)
- * B secondary — wordmark only (header, nav)
- * C compact  — tighter lockup (sidebar, partner)
- * D stacked  — non-horizontal (mobile short header)
- * E mark     — brand seal without wordmark (favicon, loader, export corner)
- */
 export function DiscoverLogo({
   variant = "secondary",
   className = "",
   inverted = false,
 }: LogoProps) {
-  const color = inverted ? "var(--discover-yellow)" : "var(--discover-obsidian)";
-  const tagColor = inverted ? "var(--discover-obsidian)" : "var(--discover-storm)";
+  const color = inverted ? "var(--discover-champagne)" : "var(--discover-pearl)";
+  const tagColor = inverted ? "var(--discover-night)" : "var(--discover-cloud)";
 
   if (variant === "mark") {
     return (
       <Image
         src="/brand/logo_2.png"
-        alt="DISCOVER"
-        width={40}
-        height={40}
+        alt="DISCOVER Analytics"
+        width={32}
+        height={32}
         className={className}
         priority
       />
     );
   }
 
-  if (variant === "stacked") {
-    return (
-      <div className={className} style={{ textAlign: "center" }}>
-        <div
-          className="font-blogh"
-          style={{ color, fontSize: "1.35rem", lineHeight: 1.1 }}
-        >
-          DISCOVER
-        </div>
-        <div
-          className="font-glora-xl"
-          style={{
-            color: tagColor,
-            fontSize: "0.55rem",
-            letterSpacing: "0.18em",
-            marginTop: "0.45rem",
-            textTransform: "uppercase",
-          }}
-        >
-          4 Friends,
-          <br />
-          By Friends.
-        </div>
-      </div>
-    );
-  }
-
-  if (variant === "compact") {
-    return (
-      <div className={className} style={{ display: "inline-flex", flexDirection: "column", gap: 4 }}>
-        <span className="font-blogh" style={{ color, fontSize: "1.1rem" }}>
-          DISCOVER
-        </span>
-        <span
-          className="font-glora-xl"
-          style={{ color: tagColor, fontSize: "0.5rem", letterSpacing: "0.16em" }}
-        >
-          4 FRIENDS, BY FRIENDS.
-        </span>
-      </div>
-    );
-  }
-
-  if (variant === "primary") {
+  if (variant === "stacked" || variant === "compact" || variant === "primary") {
+    const size =
+      variant === "primary" ? "clamp(1.55rem, 4vw, 2.1rem)" : variant === "compact" ? "1rem" : "1.25rem";
     return (
       <div className={className}>
-        <div className="font-blogh" style={{ color, fontSize: "clamp(1.8rem, 5vw, 2.6rem)" }}>
+        <div className="font-blogh" style={{ color, fontSize: size, lineHeight: 1.1 }}>
           DISCOVER
         </div>
         <div
-          className="font-glora-xl"
+          className="font-glora"
           style={{
             color: tagColor,
-            fontSize: "0.7rem",
-            letterSpacing: "0.22em",
-            marginTop: "0.65rem",
+            fontSize: variant === "primary" ? "0.72rem" : "0.58rem",
+            letterSpacing: "0.18em",
+            marginTop: variant === "primary" ? "0.45rem" : "0.28rem",
             textTransform: "uppercase",
           }}
         >
-          4 Friends, By Friends.
+          Analytics
         </div>
       </div>
     );
   }
 
   return (
-    <span className={`font-blogh ${className}`} style={{ color, fontSize: "1.25rem" }}>
+    <span className={`font-blogh ${className}`} style={{ color, fontSize: "1.05rem" }}>
       DISCOVER
     </span>
   );

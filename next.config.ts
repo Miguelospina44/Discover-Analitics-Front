@@ -6,6 +6,7 @@ const root = path.dirname(fileURLToPath(import.meta.url));
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  devIndicators: false,
   // Recharts 3 pulls @reduxjs/toolkit; Next 15 webpack ESM resolution breaks
   // createSlice → runtime "a[d] is not a function". Pin the CJS build.
   webpack: (config) => {
