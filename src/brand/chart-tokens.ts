@@ -56,6 +56,8 @@ export const genderSeriesColors: Record<string, string> = {
   man: discoverColors.slateBlue,
   other: discoverColors.sage,
   undisclosed: discoverColors.mauve,
+  sin_dato: discoverColors.mauve,
+  otros: discoverColors.fog,
 };
 
 export type DiscoverColorKey = keyof typeof discoverColors;

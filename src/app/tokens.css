@@ -459,6 +459,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   min-height: 15rem;
 }
 
+.chart-frame-tall {
+  height: 20rem;
+  min-height: 20rem;
+}
+
 .filter-audience {
   opacity: 0.92;
 }
@@ -568,6 +573,11 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 
   .chart-frame {
     height: 16.25rem;
+  }
+
+  .chart-frame-tall {
+    height: 22.5rem;
+    min-height: 22.5rem;
   }
 }
 

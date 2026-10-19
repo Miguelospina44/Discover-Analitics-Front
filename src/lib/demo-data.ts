@@ -1,6 +1,7 @@
 import type {
   AccountOut,
   AttendanceMeasure,
+  AudienceGenderAgeMeasure,
   GenderMeasure,
   GremialBenchmarks,
   MeResponse,
@@ -126,6 +127,43 @@ export const DEMO_BENCH: GremialBenchmarks = {
   share_other: 0.03,
   share_undisclosed: 0.07,
   note: "Promedio anónimo de ejemplo. No es una muestra real del sector.",
+};
+
+/** Seed cells from Back PR #11. Labeled as example — not Discover rows. */
+export const DEMO_AUDIENCE_GENDER_AGE: AudienceGenderAgeMeasure = {
+  name: "audience_by_gender_age",
+  title: "Audiencia por género y rango de edad",
+  unit: "headcount",
+  definition:
+    "Compradores distintos por género declarado y rango de edad (18-24 … 55+). Celdas con menos de 10 personas se agrupan en otros o se omiten. Género o edad nulos van a sin_dato. No expone user_id ni filas individuales.",
+  as_of: "2026-10-19",
+  data_quality: "ok",
+  data_source: "seed",
+  is_demo: true,
+  demo_label: "Datos de ejemplo. No corresponden a una operación real y no son filas de Discover.",
+  scope: "account",
+  k_anonymity: 10,
+  suppressed: false,
+  points: [
+    { gender: "woman", age_band: "18-24", headcount: 28, share: 0.1186 },
+    { gender: "woman", age_band: "25-34", headcount: 41, share: 0.1737 },
+    { gender: "woman", age_band: "35-44", headcount: 22, share: 0.0932 },
+    { gender: "woman", age_band: "45-54", headcount: 14, share: 0.0593 },
+    { gender: "man", age_band: "18-24", headcount: 19, share: 0.0805 },
+    { gender: "man", age_band: "25-34", headcount: 36, share: 0.1525 },
+    { gender: "man", age_band: "35-44", headcount: 24, share: 0.1017 },
+    { gender: "man", age_band: "45-54", headcount: 12, share: 0.0508 },
+    { gender: "man", age_band: "55+", headcount: 11, share: 0.0466 },
+    { gender: "other", age_band: "25-34", headcount: 11, share: 0.0466 },
+    { gender: "sin_dato", age_band: "sin_dato", headcount: 18, share: 0.0763 },
+  ],
+};
+
+/** Contract: total headcount < 10 → empty points (k-anonymity). */
+export const DEMO_AUDIENCE_GENDER_AGE_PRIVACY: AudienceGenderAgeMeasure = {
+  ...DEMO_AUDIENCE_GENDER_AGE,
+  suppressed: true,
+  points: [],
 };
 
 export const DEMO_EMPTY_ATTENDANCE: AttendanceMeasure = {

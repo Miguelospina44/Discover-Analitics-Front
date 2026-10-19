@@ -92,6 +92,28 @@ export const copy = {
       title: "¿Quién conforma su audiencia?",
       definition: "Composición de la asistencia registrada según género.",
     },
+    genderAge: {
+      title: "¿Cómo se reparte su audiencia por edad y género?",
+      definition:
+        "Personas distintas por género declarado y rango de edad. Las celdas con menos de diez personas no se muestran, para proteger la privacidad.",
+      legend: "Género",
+      age: "Rango de edad",
+      count: "Personas",
+      share: "Porcentaje",
+      demoFallback:
+        "Datos de ejemplo. No corresponden a una operación real y no son filas de Discover.",
+      privacyTitle: "No hay suficientes datos",
+      privacyBody:
+        "Hay menos de diez personas en este recorte. No mostramos la composición para proteger la privacidad de quienes asistieron. Amplíe el periodo o quite filtros e intente de nuevo.",
+      restrictedTitle: "Acceso restringido",
+      restrictedBody:
+        "Este perfil no tiene eventos asignados, por lo que no puede consultar la composición de audiencia. Si considera que se trata de un error, solicite acceso a quien administra la cuenta.",
+      unavailableTitle: "Métrica no disponible",
+      unavailableBody:
+        "Esta composición aún no está disponible para el recorte seleccionado.",
+      errorTitle: "No se pudo cargar esta gráfica",
+      error: "No se pudo cargar la composición de audiencia. Verifique su conexión e intente de nuevo.",
+    },
     attendance: {
       title: "¿Cómo se comportó la asistencia por noche?",
       definition: "Personas que ingresaron con boletería o cover, por fecha y establecimiento.",
@@ -110,6 +132,18 @@ export const copy = {
     man: "Hombre",
     other: "Otro",
     undisclosed: "Sin dato",
+    sin_dato: "Sin dato",
+    otros: "Otros",
+  },
+
+  ageBand: {
+    "18-24": "18–24",
+    "25-34": "25–34",
+    "35-44": "35–44",
+    "45-54": "45–54",
+    "55+": "55 o más",
+    sin_dato: "Sin dato",
+    otros: "Otros",
   },
 
   errors: {
@@ -132,5 +166,10 @@ export function roleLabel(role: string): string {
 
 export function genderLabel(id: string): string {
   if (id in copy.gender) return copy.gender[id as keyof typeof copy.gender];
+  return id;
+}
+
+export function ageBandLabel(id: string): string {
+  if (id in copy.ageBand) return copy.ageBand[id as keyof typeof copy.ageBand];
   return id;
 }

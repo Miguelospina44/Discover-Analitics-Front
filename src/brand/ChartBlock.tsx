@@ -3,10 +3,12 @@ import type { ReactNode } from "react";
 export function ChartBlock({
   title,
   definition,
+  notice,
   children,
 }: {
   title: string;
   definition: string;
+  notice?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -15,6 +17,7 @@ export function ChartBlock({
       <p className="mb-5 mt-1.5 max-w-[42rem] text-[length:var(--step-small)] leading-relaxed text-muted-foreground">
         {definition}
       </p>
+      {notice}
       {children}
     </section>
   );

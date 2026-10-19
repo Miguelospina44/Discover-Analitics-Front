@@ -53,7 +53,33 @@ export type MeasureEnvelope<T> = {
 export type AttendanceMeasure = MeasureEnvelope<AttendancePoint>;
 export type SalesMeasure = MeasureEnvelope<SalesPoint>;
 
-export type GenderCode = "woman" | "man" | "other" | "undisclosed";
+export type GenderCode = "woman" | "man" | "other" | "undisclosed" | "sin_dato" | "otros";
+
+export type AgeBand = "18-24" | "25-34" | "35-44" | "45-54" | "55+" | "sin_dato" | "otros";
+
+export type AudienceGenderAgePoint = {
+  gender: GenderCode | string;
+  age_band: AgeBand | string;
+  headcount: number;
+  share: number;
+};
+
+/** Envelope for GET /api/v1/metrics/audience-by-gender-age (Back PR #11). */
+export type AudienceGenderAgeMeasure = {
+  name: string;
+  title: string;
+  unit: string;
+  definition: string;
+  as_of: string | null;
+  data_quality: string;
+  data_source: string;
+  is_demo: boolean;
+  demo_label: string | null;
+  scope: string;
+  k_anonymity: number;
+  suppressed: boolean;
+  points: AudienceGenderAgePoint[];
+};
 
 export type GenderPoint = {
   gender: GenderCode | string;

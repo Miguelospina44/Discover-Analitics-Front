@@ -1,4 +1,4 @@
-import type { AttendancePoint, SalesPoint } from "./types";
+import type { AttendancePoint, AudienceGenderAgePoint, SalesPoint } from "./types";
 
 export function sumRedeemed(points: AttendancePoint[]): number {
   return points.reduce((acc, p) => acc + p.redeemed_tickets, 0);
@@ -39,6 +39,13 @@ export function formatRevenueFromField(revenueCents: number): string {
 
 export function formatCount(n: number): string {
   return n.toLocaleString("es-CO");
+}
+
+export function formatSharePercent(share: number): string {
+  return `${(share * 100).toLocaleString("es-CO", {
+    maximumFractionDigits: 1,
+    minimumFractionDigits: 0,
+  })} %`;
 }
 
 export function formatAverage(n: number | null | undefined): string {
@@ -168,4 +175,59 @@ export function pivotSalesByNight(
 
 export function shortNightLabel(iso: string): string {
   return formatNightTick(iso);
+}
+
+export const AGE_BAND_ORDER = [
+  "18-24",
+  "25-34",
+  "35-44",
+  "45-54",
+  "55+",
+  "sin_dato",
+  "otros",
+] as const;
+
+export const GENDER_SERIES_ORDER = ["woman", "man", "other", "sin_dato", "otros"] as const;
+
+export type AudienceAgeRow = {
+  age_band: string;
+} & Record<string, string | number>;
+
+export function pivotAudienceGenderAge(points: AudienceGenderAgePoint[]): {
+  rows: AudienceAgeRow[];
+  genders: string[];
+} {
+  const presentGenders = new Set(points.map((p) => p.gender));
+  const genders: string[] = GENDER_SERIES_ORDER.filter((g) => presentGenders.has(g));
+  for (const p of points) {
+    if (!genders.includes(p.gender)) genders.push(p.gender);
+  }
+
+  const presentBands = new Set(points.map((p) => p.age_band));
+  const bands: string[] = AGE_BAND_ORDER.filter((b) => presentBands.has(b));
+  for (const p of points) {
+    if (!bands.includes(p.age_band)) bands.push(p.age_band);
+  }
+
+  const byBand = new Map<string, AudienceAgeRow>();
+  for (const band of bands) {
+    const row: AudienceAgeRow = { age_band: band };
+    for (const gender of genders) {
+      row[gender] = 0;
+      row[`${gender}_share`] = 0;
+    }
+    byBand.set(band, row);
+  }
+  for (const p of points) {
+    const row = byBand.get(p.age_band);
+    if (!row) continue;
+    row[p.gender] = p.headcount;
+    row[`${p.gender}_share`] = p.share;
+  }
+  const rows: AudienceAgeRow[] = [];
+  for (const band of bands) {
+    const row = byBand.get(band);
+    if (row) rows.push(row);
+  }
+  return { rows, genders };
 }
