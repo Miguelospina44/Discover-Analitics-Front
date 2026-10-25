@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { copy, roleLabel } from "@/copy";
 import { useAuth } from "@/lib/auth";
 import { DiscoverLogo } from "./DiscoverLogo";
+import { NavSidebar } from "./NavSidebar";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { token, me, ready, isDemo, logout } = useAuth();
@@ -27,14 +28,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative min-h-dvh bg-background">
       <div className="app-backdrop" aria-hidden />
-      <div className="shell-content">
+      {signedIn && <NavSidebar />}
+      <div className={signedIn ? "shell-content lg:ml-64" : "shell-content"}>
         <a className="skip-link" href="#contenido">
           {copy.skipToContent}
         </a>
         <header className="shell-header sticky top-0 z-20 flex items-center justify-between gap-4 px-[var(--space-page)] py-[0.9rem]">
-          <Link href="/" className="text-inherit no-underline">
-            <DiscoverLogo variant="compact" />
-          </Link>
+          <div className="flex items-center gap-3">
+            {signedIn && <NavSidebar />}
+            <Link href="/" className="text-inherit no-underline">
+              <DiscoverLogo variant="compact" />
+            </Link>
+          </div>
           <nav
             className="font-glora flex flex-wrap items-center justify-end gap-3 text-[0.9rem]"
             aria-label={copy.nav.session}
