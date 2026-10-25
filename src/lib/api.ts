@@ -10,6 +10,7 @@ import {
   type TokenResponse,
   type VenueOut,
 } from "./types";
+import type { EventSubmissionsResponse, EventSummaryResponse } from "./events-types";
 
 export function apiUrl(path = ""): string {
   const base = (process.env.NEXT_PUBLIC_API_URL ?? "http://127.0.0.1:8002").replace(/\/$/, "");
@@ -136,4 +137,53 @@ export async function fetchGremialBenchmarks(
   });
   if (!res.ok) await parseError(res);
   return res.json() as Promise<GremialBenchmarks>;
+}
+
+export type EventSubmissionsQuery = {
+  period_start?: string;
+  period_end?: string;
+  collective?: string;
+  presale?: string;
+  commission?: string;
+  is_demo?: boolean;
+};
+
+export async function fetchEventSubmissions(
+  token: string,
+  query: EventSubmissionsQuery,
+): Promise<EventSubmissionsResponse> {
+  const qs = new URLSearchParams();
+  if (query.period_start) qs.set("period_start", query.period_start);
+  if (query.period_end) qs.set("period_end", query.period_end);
+  if (query.collective) qs.set("collective", query.collective);
+  if (query.presale) qs.set("presale", query.presale);
+  if (query.commission) qs.set("commission", query.commission);
+  if (query.is_demo) qs.set("is_demo", "true");
+  
+  const suffix = qs.toString() ? `?${qs}` : "";
+  const res = await fetch(apiUrl(`/api/v1/event-submissions${suffix}`), {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) await parseError(res);
+  return res.json() as Promise<EventSubmissionsResponse>;
+}
+
+export async function fetchEventSubmissionsSummary(
+  token: string,
+  query: EventSubmissionsQuery,
+): Promise<EventSummaryResponse> {
+  const qs = new URLSearchParams();
+  if (query.period_start) qs.set("period_start", query.period_start);
+  if (query.period_end) qs.set("period_end", query.period_end);
+  if (query.collective) qs.set("collective", query.collective);
+  if (query.presale) qs.set("presale", query.presale);
+  if (query.commission) qs.set("commission", query.commission);
+  if (query.is_demo) qs.set("is_demo", "true");
+  
+  const suffix = qs.toString() ? `?${qs}` : "";
+  const res = await fetch(apiUrl(`/api/v1/event-submissions/summary${suffix}`), {
+    headers: authHeaders(token),
+  });
+  if (!res.ok) await parseError(res);
+  return res.json() as Promise<EventSummaryResponse>;
 }
