@@ -16,6 +16,12 @@ import { ApiError, DEMO_LOGINS } from "@/lib/types";
 
 const showTrialAccounts = process.env.NODE_ENV !== "production";
 
+const DEMO_ROLE_OPTIONS = [
+  { value: "super_admin", label: copy.demo.roles.super_admin },
+  { value: "collective", label: copy.demo.roles.collective },
+  { value: "account_owner", label: copy.demo.roles.account_owner },
+] as const;
+
 export default function LoginPage() {
   const { token, ready, isDemo, login, enterDemo } = useAuth();
   const router = useRouter();
@@ -24,6 +30,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [showDemoSelector, setShowDemoSelector] = useState(false);
+  const [selectedDemoRole, setSelectedDemoRole] = useState("super_admin");
 
   useEffect(() => {
     if (ready && (token || isDemo)) router.replace("/");
@@ -131,18 +139,60 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={pending}>
               {pending ? copy.login.submitting : copy.login.submit}
             </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              className="w-full"
-              disabled={pending}
-              onClick={() => {
-                enterDemo();
-                router.replace("/");
-              }}
-            >
-              {copy.login.preview}
-            </Button>
+            {!showDemoSelector ? (
+              <Button
+                type="button"
+                variant="secondary"
+                className="w-full"
+                disabled={pending}
+                onClick={() => setShowDemoSelector(true)}
+              >
+                {copy.login.preview}
+              </Button>
+            ) : (
+              <div className="flex flex-col gap-3">
+                <Field>
+                  <FieldLabel>{copy.login.previewView}</FieldLabel>
+                  <p className="text-[length:var(--step-small)] leading-relaxed text-muted-foreground">
+                    {copy.demo.viewHint}
+                  </p>
+                  <ToggleGroup
+                    type="single"
+                    value={selectedDemoRole}
+                    onValueChange={(value) => value && setSelectedDemoRole(value)}
+                    spacing={2}
+                    size="sm"
+                    aria-label={copy.login.previewView}
+                  >
+                    {DEMO_ROLE_OPTIONS.map((role) => (
+                      <ToggleGroupItem key={role.value} value={role.value}>
+                        {role.label}
+                      </ToggleGroupItem>
+                    ))}
+                  </ToggleGroup>
+                </Field>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    className="flex-1"
+                    onClick={() => setShowDemoSelector(false)}
+                  >
+                    {copy.login.previewBack}
+                  </Button>
+                  <Button
+                    type="button"
+                    className="flex-1"
+                    onClick={() => {
+                      enterDemo(selectedDemoRole);
+                      router.replace("/");
+                    }}
+                  >
+                    {copy.login.previewContinue}
+                  </Button>
+                </div>
+              </div>
+            )}
           </div>
         </form>
       </Card>

@@ -23,6 +23,16 @@ export const copy = {
     signOut: "Cerrar sesión",
     accountFallback: "cuenta",
     session: "Sesión",
+    menu: "Menú de navegación",
+    collapse: "Contraer menú",
+    expand: "Expandir menú",
+    tabs: {
+      summary: "Resumen",
+      sales: "Ventas",
+      audience: "Audiencia",
+      trends: "Tendencias del mercado",
+      events: "Eventos",
+    },
   },
 
   footer: "DISCOVER Analytics. Indicadores para decidir con claridad.",
@@ -36,12 +46,22 @@ export const copy = {
     submitting: "Verificando acceso…",
     demoHint: "Cuentas de prueba",
     preview: "Ver un panel de ejemplo",
+    previewView: "Vista de ejemplo",
+    previewContinue: "Continuar con el ejemplo",
+    previewBack: "Volver",
   },
 
   demo: {
     banner:
       "Está viendo datos de ejemplo. No corresponden a una operación real y sirven solo para revisar el panel.",
     exit: "Salir del ejemplo",
+    viewLabel: "Vista de ejemplo",
+    viewHint: "Cambie la vista para revisar permisos. Los datos siguen siendo ficticios.",
+    roles: {
+      super_admin: "Admin Discover",
+      collective: "Colectivo",
+      account_owner: "Local/grupo",
+    },
   },
 
   dashboard: {
@@ -74,6 +94,18 @@ export const copy = {
     },
     salesGenderNote:
       "El recorte por audiencia no aplica a ingresos: esa dimensión no está disponible en ventas.",
+  },
+
+  salesPage: {
+    intro: "Ingresos y órdenes por noche, según el periodo y los establecimientos que usted eligió.",
+  },
+
+  audiencePage: {
+    intro: "Asistencia por noche y composición de la audiencia registrada.",
+  },
+
+  trendsPage: {
+    intro: "Comparación anónima con establecimientos del sector. Es una referencia, no un ranking.",
   },
 
   filters: {
@@ -122,6 +154,61 @@ export const copy = {
   roles: {
     super_admin: "Administración",
     account_owner: "Dirección",
+    collective: "Colectivo",
+  },
+
+  events: {
+    title: "Eventos registrados",
+    intro: "Respuestas del formulario «Detalles Evento» que los colectivos envían a Discover.",
+    kpis: {
+      total: "Total eventos",
+      collectives: "Colectivos únicos",
+      withPresale: "Con preventa exclusiva",
+      thisMonth: "Eventos este mes",
+      last30: "Últimos 30 días",
+      topCollective: "Más recurrente",
+    },
+    charts: {
+      byMonth: "Eventos registrados por mes",
+      byDate: "Evolución por fecha",
+      presale: "Preventa exclusiva Discover",
+      commission: "Distribución de comisión",
+      topCollectives: "Eventos por colectivo",
+      commitments: "Compromisos de promoción",
+      payment: "Medio de pago",
+      benefits: "Beneficios exclusivos",
+      nightType: "Tipo de noche",
+      nightTypeNote:
+        "Clasificación ilustrativa de ejemplo. El formulario no envía género musical; no forma parte del contrato del Back.",
+    },
+    table: {
+      title: "Todos los eventos",
+      date: "Fecha",
+      collective: "Colectivo",
+      event: "Evento",
+      presale: "Preventa",
+      commission: "Comisión",
+      benefit: "Beneficio",
+      commitments: "Compromisos",
+      payment: "Pago",
+      flyer: "Flyer",
+      noResults: "Sin resultados con estos filtros",
+    },
+    filters: {
+      search: "Buscar evento, colectivo, beneficio…",
+      allCollectives: "Todos los colectivos",
+      allPresales: "Preventa: todas",
+      allCommissions: "Todas las comisiones",
+      allMonths: "Todos los meses",
+      clear: "Limpiar",
+      yes: "Sí",
+      no: "No",
+    },
+    benefitNote: "Solo aplican a eventos sin preventa exclusiva",
+    exampleNote: "Datos de ejemplo. No corresponden a respuestas reales del formulario.",
+    restricted:
+      "No tiene permiso para consultar los eventos de los colectivos. Esta sección está reservada al equipo Discover y a cada colectivo sobre sus propias fechas.",
+    unassigned: "Sin asignar",
   },
 } as const;
 
