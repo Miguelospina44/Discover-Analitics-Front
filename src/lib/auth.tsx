@@ -11,11 +11,25 @@ import {
 } from "react";
 import { copy } from "@/copy";
 import { fetchMe, login as apiLogin } from "./api";
-import { DEMO_ME } from "./demo-data";
+import { demoProfile } from "./demo-data";
 import { ApiError, type MeResponse } from "./types";
 
 const TOKEN_KEY = "da_access_token";
 const DEMO_KEY = "da_demo";
+const DEMO_ROLE_KEY = "da_demo_role";
+
+export const DEMO_ROLES = ["super_admin", "collective", "account_owner"] as const;
+export type DemoRole = (typeof DEMO_ROLES)[number];
+
+function readDemoRole(): DemoRole {
+  try {
+    const stored = localStorage.getItem(DEMO_ROLE_KEY);
+    if (stored && DEMO_ROLES.includes(stored as DemoRole)) return stored as DemoRole;
+  } catch {
+    /* ignore */
+  }
+  return "super_admin";
+}
 
 type AuthContextValue = {
   token: string | null;
@@ -24,7 +38,7 @@ type AuthContextValue = {
   isSuperAdmin: boolean;
   isDemo: boolean;
   login: (email: string, password: string) => Promise<void>;
-  enterDemo: () => void;
+  enterDemo: (role?: string) => void;
   logout: () => void;
   refreshMe: () => Promise<void>;
 };
@@ -48,7 +62,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const refreshMe = useCallback(async () => {
     if (readDemoFlag()) {
       setIsDemo(true);
-      setMe(DEMO_ME);
+      setMe(demoProfile(readDemoRole()));
       setToken(null);
       return;
     }
@@ -71,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       if (readDemoFlag()) {
         setIsDemo(true);
-        setMe(DEMO_ME);
+        setMe(demoProfile(readDemoRole()));
         setToken(null);
         setReady(true);
         return;
@@ -113,22 +127,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
-  const enterDemo = useCallback(() => {
+  const enterDemo = useCallback((role = "super_admin") => {
+    const profile = demoProfile(role);
     try {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.setItem(DEMO_KEY, "1");
+      localStorage.setItem(DEMO_ROLE_KEY, profile.role);
     } catch {
       /* ignore */
     }
     setToken(null);
     setIsDemo(true);
-    setMe(DEMO_ME);
+    setMe(profile);
   }, []);
 
   const logout = useCallback(() => {
     try {
       localStorage.removeItem(TOKEN_KEY);
       localStorage.removeItem(DEMO_KEY);
+      localStorage.removeItem(DEMO_ROLE_KEY);
     } catch {
       /* ignore */
     }

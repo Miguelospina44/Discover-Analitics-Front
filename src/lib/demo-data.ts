@@ -8,13 +8,36 @@ import type {
   VenueOut,
 } from "./types";
 
+import { DEMO_COLLECTIVE_ACCOUNT_ID } from "./events-demo-data";
+
 /** Clearly fake fixtures for the MVP look-and-feel preview. Not operational data. */
-export const DEMO_ME: MeResponse = {
-  email: "ejemplo@discover.test",
-  role: "account_owner",
-  account_id: "demo-account",
-  account_name: "Sala Norte (ejemplo)",
+export const DEMO_PROFILES: Record<string, MeResponse> = {
+  super_admin: {
+    email: "ejemplo-admin@discover.test",
+    role: "super_admin",
+    account_id: "demo-discover",
+    account_name: "Discover (ejemplo)",
+  },
+  collective: {
+    email: "ejemplo-colectivo@discover.test",
+    role: "collective",
+    account_id: DEMO_COLLECTIVE_ACCOUNT_ID,
+    account_name: "Lumen Club (ejemplo)",
+  },
+  account_owner: {
+    email: "ejemplo@discover.test",
+    role: "account_owner",
+    account_id: "demo-account",
+    account_name: "Sala Norte (ejemplo)",
+  },
 };
+
+export const DEMO_ME: MeResponse = DEMO_PROFILES.account_owner;
+
+export function demoProfile(role?: string | null): MeResponse {
+  if (role && role in DEMO_PROFILES) return DEMO_PROFILES[role];
+  return DEMO_PROFILES.super_admin;
+}
 
 export const DEMO_ACCOUNTS: AccountOut[] = [
   { id: "demo-account", name: "Sala Norte (ejemplo)", slug: "sala-norte-ejemplo" },
