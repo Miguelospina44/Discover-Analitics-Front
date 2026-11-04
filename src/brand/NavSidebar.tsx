@@ -12,13 +12,11 @@ import {
   Ticket,
   TrendUp,
   Users,
-  X,
   type Icon as PhosphorIcon,
 } from "@phosphor-icons/react";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
@@ -170,15 +168,8 @@ export function MobileNav() {
         </Button>
       </SheetTrigger>
       <SheetContent side="left" className="w-64 p-0">
-        <SheetHeader className="border-b border-[var(--discover-slate)] px-6 py-4">
-          <div className="flex items-center justify-between">
-            <SheetTitle className="font-glora text-base">{copy.nav.menu}</SheetTitle>
-            <SheetClose asChild>
-              <Button variant="ghost" size="sm" className="h-auto w-auto p-1" aria-label="Cerrar">
-                <X size={16} weight="regular" />
-              </Button>
-            </SheetClose>
-          </div>
+        <SheetHeader className="border-b border-[var(--discover-slate)] px-6 py-4 text-left">
+          <SheetTitle className="font-glora text-base">{copy.nav.menu}</SheetTitle>
         </SheetHeader>
         <NavLinks onNavigate={() => setIsOpen(false)} />
       </SheetContent>
