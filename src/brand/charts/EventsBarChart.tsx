@@ -1,7 +1,8 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { ChartFrame } from "../ChartFrame";
+import { chartTheme, chartTooltipStyle } from "@/brand/chart-tokens";
 
 type DataPoint = {
   label: string;
@@ -14,6 +15,10 @@ type Props = {
   color?: string;
   label?: string;
 };
+
+function shorten(value: string, max = 22): string {
+  return value.length > max ? `${value.slice(0, max - 1)}…` : value;
+}
 
 export function EventsBarChart({
   data,
@@ -31,40 +36,58 @@ export function EventsBarChart({
     );
   }
 
+  const rows = horizontal ? [...data].sort((a, b) => b.value - a.value).slice(0, 12) : data;
+
   return (
     <ChartFrame label={label}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart
-          data={data}
+          data={rows}
           layout={horizontal ? "vertical" : "horizontal"}
-          margin={{ top: 10, right: 10, bottom: horizontal ? 10 : 40, left: horizontal ? 100 : 40 }}
+          margin={{ top: 8, right: 12, bottom: horizontal ? 8 : 36, left: horizontal ? 8 : 8 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--chart-grid)" vertical={false} />
+          <CartesianGrid stroke={chartTheme.grid} strokeDasharray="0" vertical={!horizontal} horizontal={horizontal} />
           {horizontal ? (
             <>
-              <XAxis type="number" stroke="var(--muted-foreground)" />
+              <XAxis type="number" stroke={chartTheme.axis} tick={{ fill: chartTheme.axis, fontSize: 11 }} tickLine={false} axisLine={false} allowDecimals={false} />
               <YAxis
                 type="category"
                 dataKey="label"
-                stroke="var(--muted-foreground)"
-                width={90}
-                tick={{ fontSize: 12 }}
+                stroke={chartTheme.axis}
+                width={128}
+                tick={{ fill: chartTheme.axis, fontSize: 11 }}
+                tickFormatter={(value: string) => shorten(value)}
+                tickLine={false}
+                axisLine={false}
               />
             </>
           ) : (
             <>
               <XAxis
                 dataKey="label"
-                stroke="var(--muted-foreground)"
-                angle={-45}
-                textAnchor="end"
-                height={80}
-                tick={{ fontSize: 12 }}
+                stroke={chartTheme.axis}
+                tick={{ fill: chartTheme.axis, fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                interval={0}
               />
-              <YAxis stroke="var(--muted-foreground)" />
+              <YAxis
+                stroke={chartTheme.axis}
+                tick={{ fill: chartTheme.axis, fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                allowDecimals={false}
+                width={36}
+              />
             </>
           )}
-          <Bar dataKey="value" fill={color} radius={[4, 4, 0, 0]} />
+          <Tooltip
+            cursor={{ fill: "rgba(232, 234, 240, 0.04)" }}
+            contentStyle={chartTooltipStyle}
+            formatter={(value) => [String(value), "Eventos"]}
+            labelFormatter={(name) => String(name)}
+          />
+          <Bar dataKey="value" fill={color} radius={horizontal ? [0, 4, 4, 0] : [4, 4, 0, 0]} maxBarSize={28} />
         </BarChart>
       </ResponsiveContainer>
     </ChartFrame>

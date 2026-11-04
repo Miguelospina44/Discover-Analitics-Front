@@ -19,13 +19,18 @@ import {
 } from "@/lib/api";
 import { ApiError } from "@/lib/types";
 import type { EventSubmission, EventSummaryResponse } from "@/lib/events-types";
+import {
+  applyEventFilters,
+  bogotaYearMonth,
+  countBy,
+  splitCommitments,
+  summarizeEventSubmissions,
+  type EventListFilters,
+} from "@/lib/events-aggregate";
+import { DEMO_EVENT_LABEL, DEMO_NIGHT_LINES, demoEventsForRole } from "@/lib/events-demo-data";
 
 const EventsBarChart = dynamic(
   () => import("@/brand/charts/EventsBarChart").then((m) => m.EventsBarChart),
-  { ssr: false },
-);
-const EventsPieChart = dynamic(
-  () => import("@/brand/charts/EventsPieChart").then((m) => m.EventsPieChart),
   { ssr: false },
 );
 
@@ -41,6 +46,10 @@ function monthLabel(month: string): string {
   return `${MONTHS[+m - 1]} ${y}`;
 }
 
+function toChart(rows: { key: string; count: number }[], labelFn?: (key: string) => string) {
+  return rows.map((row) => ({ label: labelFn ? labelFn(row.key) : row.key, value: row.count }));
+}
+
 export default function EventosPage() {
   const { token, me, isDemo, ready, logout } = useAuth();
   const router = useRouter();
@@ -49,85 +58,52 @@ export default function EventosPage() {
   const [presaleFilter, setPresaleFilter] = useState("");
   const [commissionFilter, setCommissionFilter] = useState("");
   const [monthFilter, setMonthFilter] = useState("");
-  const [events, setEvents] = useState<EventSubmission[]>([]);
-  const [summary, setSummary] = useState<EventSummaryResponse | null>(null);
+  const [catalog, setCatalog] = useState<EventSubmission[]>([]);
+  const [summaryFromApi, setSummaryFromApi] = useState<EventSummaryResponse | null>(null);
+  const [usingFixture, setUsingFixture] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const signedIn = Boolean(token || isDemo);
   const canView = me?.role === "super_admin" || me?.role === "collective";
   const isSuperAdmin = me?.role === "super_admin";
 
-  useEffect(() => {
-    if (ready && !canView) {
-      router.replace("/");
-    }
-  }, [ready, canView, router]);
+  const applyFixture = useCallback(() => {
+    if (!me) return;
+    setCatalog(demoEventsForRole(me.role, me.account_id));
+    setSummaryFromApi(null);
+    setUsingFixture(true);
+    setError(null);
+  }, [me]);
 
   const load = useCallback(async () => {
-    if (!canView) return;
-    if (!token && !isDemo) return;
+    if (!me || !canView) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
+    if (isDemo || !token) {
+      applyFixture();
+      setLoading(false);
+      return;
+    }
+
+    const query: EventSubmissionsQuery = {};
     try {
-      const query: EventSubmissionsQuery = {
-        is_demo: isDemo,
-      };
-
-      if (collectiveFilter) query.collective = collectiveFilter;
-      if (presaleFilter) {
-        query.presale = presaleFilter === "Sí" ? "si" : "no";
-      }
-      if (commissionFilter) query.commission = commissionFilter;
-      if (monthFilter) {
-        const [y, m] = monthFilter.split("-");
-        query.period_start = `${y}-${m}-01`;
-        const lastDay = new Date(+y, +m, 0).getDate();
-        query.period_end = `${y}-${m}-${lastDay.toString().padStart(2, "0")}`;
-      }
-
       const [eventsRes, summaryRes] = await Promise.all([
-        token
-          ? fetchEventSubmissions(token, query)
-          : Promise.resolve({
-              name: "event_submissions",
-              title: "Respuestas de detalles de evento",
-              data_source: "fixture",
-              is_demo: true,
-              demo_label: "Datos de ejemplo",
-              as_of: new Date().toISOString().split("T")[0],
-              scope: "admin",
-              unmapped_visible: true,
-              count: 0,
-              items: [],
-            }),
-        token
-          ? fetchEventSubmissionsSummary(token, query)
-          : Promise.resolve({
-              name: "event_submissions_summary",
-              scope: "admin",
-              data_source: "fixture",
-              is_demo: true,
-              demo_label: "Datos de ejemplo",
-              as_of: new Date().toISOString().split("T")[0],
-              kpis: {
-                event_count: 0,
-                collective_count: 0,
-                presale_pct: 0,
-                events_this_month: 0,
-                top_collective: null,
-              },
-              unmapped_count: 0,
-              distributions: {
-                by_commission: [],
-                by_presale: [],
-              },
-            }),
+        fetchEventSubmissions(token, query),
+        fetchEventSubmissionsSummary(token, query),
       ]);
-
-      setEvents(eventsRes.items);
-      setSummary(summaryRes);
+      if (eventsRes.is_demo || eventsRes.items.length === 0) {
+        applyFixture();
+      } else {
+        setCatalog(eventsRes.items);
+        setSummaryFromApi(summaryRes);
+        setUsingFixture(false);
+      }
     } catch (err) {
       if (err instanceof ApiError && err.status === 401) {
         logout();
@@ -135,64 +111,126 @@ export default function EventosPage() {
         return;
       }
       if (err instanceof ApiError && err.status === 403) {
+        setCatalog([]);
         setError(copy.events.restricted);
+        setUsingFixture(false);
       } else {
-        setError(err instanceof ApiError ? err.message : copy.errors.metrics);
+        applyFixture();
       }
     } finally {
       setLoading(false);
     }
-  }, [token, isDemo, canView, collectiveFilter, presaleFilter, commissionFilter, monthFilter, logout, router]);
+  }, [token, isDemo, canView, me, applyFixture, logout, router]);
 
   useEffect(() => {
-    if (ready && canView) void load();
-  }, [ready, canView, load]);
+    if (!ready) return;
+    if (!signedIn) {
+      router.replace("/login");
+      return;
+    }
+    if (canView) void load();
+    else setLoading(false);
+  }, [ready, signedIn, canView, load, router]);
 
-  const uniqueCollectives = useMemo(() => {
-    const set = new Set(events.map((e) => e.collective_name));
-    return Array.from(set).sort();
-  }, [events]);
-
-  const uniqueCommissions = useMemo(() => {
-    const set = new Set(events.map((e) => e.commission));
-    return Array.from(set).sort((a, b) => {
-      const aNum = parseFloat(a);
-      const bNum = parseFloat(b);
-      if (!isNaN(aNum) && !isNaN(bNum)) return aNum - bNum;
-      return a.localeCompare(b, "es");
-    });
-  }, [events]);
-
-  const uniqueMonths = useMemo(() => {
-    const set = new Set(
-      events.map((e) => {
-        const date = new Date(e.event_at);
-        return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}`;
-      }),
-    );
-    return Array.from(set).sort();
-  }, [events]);
+  const listFilters: EventListFilters = useMemo(() => {
+    const next: EventListFilters = {};
+    if (collectiveFilter) next.collective = collectiveFilter;
+    if (presaleFilter === copy.events.filters.yes) next.presale = "si";
+    if (presaleFilter === copy.events.filters.no) next.presale = "no";
+    if (commissionFilter) next.commission = commissionFilter;
+    if (monthFilter) {
+      const [y, m] = monthFilter.split("-");
+      next.period_start = `${y}-${m}-01`;
+      const lastDay = new Date(+y, +m, 0).getDate();
+      next.period_end = `${y}-${m}-${lastDay.toString().padStart(2, "0")}`;
+    }
+    return next;
+  }, [collectiveFilter, presaleFilter, commissionFilter, monthFilter]);
 
   const filteredEvents = useMemo(() => {
-    return events.filter((e) => {
-      const matchesSearch =
-        !search ||
-        [
-          e.collective_name,
-          e.collective_raw,
-          e.event_name,
-          e.commission,
-          e.payment_method ?? "",
-          e.exclusive_benefit ?? "",
-          e.promotion_commitments ?? "",
-        ]
-          .join(" ")
-          .toLowerCase()
-          .includes(search.toLowerCase());
+    const byField = applyEventFilters(catalog, listFilters);
+    const needle = search.trim().toLowerCase();
+    if (!needle) return byField;
+    return byField.filter((event) =>
+      [
+        event.collective_name,
+        event.collective_raw,
+        event.event_name,
+        event.commission,
+        event.payment_method ?? "",
+        event.exclusive_benefit ?? "",
+        event.promotion_commitments ?? "",
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(needle),
+    );
+  }, [catalog, listFilters, search]);
 
-      return matchesSearch;
+  const summary = useMemo(() => {
+    if (usingFixture || !summaryFromApi) {
+      return summarizeEventSubmissions(filteredEvents, {
+        scope: isSuperAdmin ? "admin" : "collective",
+        isDemo: true,
+        demoLabel: DEMO_EVENT_LABEL,
+      });
+    }
+    return summaryFromApi;
+  }, [usingFixture, summaryFromApi, filteredEvents, isSuperAdmin]);
+
+  const uniqueCollectives = useMemo(() => {
+    return Array.from(new Set(catalog.map((event) => event.collective_name))).sort((a, b) =>
+      a.localeCompare(b, "es"),
+    );
+  }, [catalog]);
+
+  const uniqueCommissions = useMemo(() => {
+    return Array.from(new Set(catalog.map((event) => event.commission))).sort((a, b) => {
+      const aNum = parseFloat(a);
+      const bNum = parseFloat(b);
+      if (!Number.isNaN(aNum) && !Number.isNaN(bNum)) return aNum - bNum;
+      return a.localeCompare(b, "es");
     });
-  }, [events, search]);
+  }, [catalog]);
+
+  const uniqueMonths = useMemo(() => {
+    return Array.from(new Set(catalog.map((event) => bogotaYearMonth(event.event_at)))).sort();
+  }, [catalog]);
+
+  const byMonth = useMemo(
+    () =>
+      countBy(filteredEvents, (event) => bogotaYearMonth(event.event_at)).sort((a, b) =>
+        a.key.localeCompare(b.key),
+      ),
+    [filteredEvents],
+  );
+  const byCollective = useMemo(
+    () => countBy(filteredEvents, (event) => event.collective_name),
+    [filteredEvents],
+  );
+  const byPayment = useMemo(
+    () => countBy(filteredEvents, (event) => event.payment_method),
+    [filteredEvents],
+  );
+  const byBenefit = useMemo(
+    () => countBy(filteredEvents, (event) => event.exclusive_benefit),
+    [filteredEvents],
+  );
+  const byCommitment = useMemo(() => {
+    const acc = new Map<string, number>();
+    for (const event of filteredEvents) {
+      for (const commitment of splitCommitments(event.promotion_commitments)) {
+        acc.set(commitment, (acc.get(commitment) ?? 0) + 1);
+      }
+    }
+    return Array.from(acc.entries())
+      .map(([key, count]) => ({ key, count }))
+      .sort((a, b) => b.count - a.count || a.key.localeCompare(b.key, "es"));
+  }, [filteredEvents]);
+  const byNightType = useMemo(() => {
+    if (!usingFixture) return [];
+    return countBy(filteredEvents, (event) => DEMO_NIGHT_LINES[event.event_name] ?? "Sin clasificar");
+  }, [filteredEvents, usingFixture]);
 
   const handleClear = () => {
     setSearch("");
@@ -202,7 +240,7 @@ export default function EventosPage() {
     setMonthFilter("");
   };
 
-  if (!ready || loading) {
+  if (!ready || (loading && canView)) {
     return (
       <main id="contenido" className="page-wrap" tabIndex={-1}>
         <p className="page-kicker">{copy.loading}</p>
@@ -215,6 +253,13 @@ export default function EventosPage() {
     return (
       <main id="contenido" className="page-wrap" tabIndex={-1}>
         <h1 className="page-title">{copy.nav.tabs.events}</h1>
+        <p className="page-lead">{copy.events.intro}</p>
+        {isDemo ? (
+          <Alert className="mt-6 mb-6" role="status">
+            <Info size={16} weight="regular" aria-hidden />
+            <AlertDescription>{copy.demo.banner}</AlertDescription>
+          </Alert>
+        ) : null}
         <Alert variant="destructive" className="mt-6">
           <WarningCircle size={16} weight="regular" aria-hidden />
           <AlertDescription>{copy.events.restricted}</AlertDescription>
@@ -223,21 +268,23 @@ export default function EventosPage() {
     );
   }
 
+  const showDemoBanner = isDemo || usingFixture || summary.is_demo;
+
   return (
     <main id="contenido" className="page-wrap" tabIndex={-1}>
       <h1 className="page-title">{copy.events.title}</h1>
       <p className="page-lead">{copy.events.intro}</p>
 
-      {(isDemo || summary?.is_demo) && (
+      {showDemoBanner ? (
         <Alert className="mt-6 mb-6" role="status">
           <Info size={16} weight="regular" aria-hidden />
-          <AlertDescription>
-            {summary?.demo_label ?? copy.events.exampleNote}
-          </AlertDescription>
+          <AlertDescription>{summary.demo_label ?? copy.events.exampleNote}</AlertDescription>
         </Alert>
+      ) : (
+        <div className="h-6" />
       )}
 
-      {error && (
+      {error ? (
         <Alert variant="destructive" className="mt-6 mb-6">
           <WarningCircle size={16} weight="regular" aria-hidden />
           <AlertDescription>
@@ -247,10 +294,9 @@ export default function EventosPage() {
             </Button>
           </AlertDescription>
         </Alert>
-      )}
+      ) : null}
 
-      {/* Filtros */}
-      <div className="mt-8 mb-6 grid grid-cols-1 gap-3 rounded-lg bg-[var(--surface)] p-4 sm:grid-cols-2 lg:grid-cols-6">
+      <div className="mt-2 mb-6 grid grid-cols-1 gap-3 rounded-lg bg-[var(--surface)] p-4 sm:grid-cols-2 lg:grid-cols-6">
         <Input
           type="search"
           placeholder={copy.events.filters.search}
@@ -258,30 +304,26 @@ export default function EventosPage() {
           onChange={(e) => setSearch(e.target.value)}
           className="lg:col-span-2"
         />
-        {isSuperAdmin && (
+        {isSuperAdmin ? (
           <select
             value={collectiveFilter}
-            onChange={(e) => {
-              setCollectiveFilter(e.target.value);
-              void load();
-            }}
+            onChange={(e) => setCollectiveFilter(e.target.value)}
             className="input-field h-11 text-sm"
+            aria-label={copy.events.filters.allCollectives}
           >
             <option value="">{copy.events.filters.allCollectives}</option>
-            {uniqueCollectives.map((c) => (
-              <option key={c} value={c}>
-                {c}
+            {uniqueCollectives.map((collective) => (
+              <option key={collective} value={collective}>
+                {collective}
               </option>
             ))}
           </select>
-        )}
+        ) : null}
         <select
           value={presaleFilter}
-          onChange={(e) => {
-            setPresaleFilter(e.target.value);
-            void load();
-          }}
+          onChange={(e) => setPresaleFilter(e.target.value)}
           className="input-field h-11 text-sm"
+          aria-label={copy.events.filters.allPresales}
         >
           <option value="">{copy.events.filters.allPresales}</option>
           <option>{copy.events.filters.yes}</option>
@@ -289,31 +331,27 @@ export default function EventosPage() {
         </select>
         <select
           value={commissionFilter}
-          onChange={(e) => {
-            setCommissionFilter(e.target.value);
-            void load();
-          }}
+          onChange={(e) => setCommissionFilter(e.target.value)}
           className="input-field h-11 text-sm"
+          aria-label={copy.events.filters.allCommissions}
         >
           <option value="">{copy.events.filters.allCommissions}</option>
-          {uniqueCommissions.map((c) => (
-            <option key={c} value={c}>
-              {c}%
+          {uniqueCommissions.map((commission) => (
+            <option key={commission} value={commission}>
+              {commission === "tarifa especial" ? commission : `${commission}%`}
             </option>
           ))}
         </select>
         <select
           value={monthFilter}
-          onChange={(e) => {
-            setMonthFilter(e.target.value);
-            void load();
-          }}
+          onChange={(e) => setMonthFilter(e.target.value)}
           className="input-field h-11 text-sm"
+          aria-label={copy.events.filters.allMonths}
         >
           <option value="">{copy.events.filters.allMonths}</option>
-          {uniqueMonths.map((m) => (
-            <option key={m} value={m}>
-              {monthLabel(m)}
+          {uniqueMonths.map((month) => (
+            <option key={month} value={month}>
+              {monthLabel(month)}
             </option>
           ))}
         </select>
@@ -322,63 +360,67 @@ export default function EventosPage() {
         </Button>
       </div>
 
-      {/* KPIs */}
-      {summary && (
-        <section className="kpi-stage mb-10" aria-label={copy.events.title}>
-          <KpiStat label={copy.events.kpis.total} value={summary.kpis.event_count.toString()} />
-          <KpiStat
-            label={copy.events.kpis.collectives}
-            value={summary.kpis.collective_count.toString()}
-          />
-          <KpiStat
-            label={copy.events.kpis.withPresale}
-            value={`${Math.round(summary.kpis.presale_pct)}%`}
-          />
-          <KpiStat
-            label={copy.events.kpis.thisMonth}
-            value={summary.kpis.events_this_month.toString()}
-          />
-          <KpiStat
-            label={copy.events.kpis.topCollective}
-            value={summary.kpis.top_collective?.name ?? "—"}
-            hint={
-              summary.kpis.top_collective
-                ? `${summary.kpis.top_collective.event_count} eventos`
-                : undefined
-            }
-          />
-        </section>
-      )}
+      <section className="kpi-stage mb-10" aria-label={copy.events.title}>
+        <KpiStat label={copy.events.kpis.total} value={summary.kpis.event_count.toString()} />
+        <KpiStat label={copy.events.kpis.collectives} value={summary.kpis.collective_count.toString()} />
+        <KpiStat label={copy.events.kpis.withPresale} value={`${Math.round(summary.kpis.presale_pct)}%`} />
+        <KpiStat label={copy.events.kpis.thisMonth} value={summary.kpis.events_this_month.toString()} />
+        <KpiStat
+          label={copy.events.kpis.topCollective}
+          value={summary.kpis.top_collective?.name ?? "—"}
+          hint={summary.kpis.top_collective ? `${summary.kpis.top_collective.event_count} eventos` : undefined}
+        />
+      </section>
 
-      {/* Gráficos */}
-      {summary && summary.kpis.event_count > 0 && (
+      {summary.kpis.event_count > 0 ? (
         <div className="mb-10 grid gap-6 md:grid-cols-2">
-          {summary.distributions.by_presale.length > 0 && (
-            <ChartBlock title={copy.events.charts.presale} definition="">
-              <EventsPieChart
-                label={copy.events.charts.presale}
-                data={summary.distributions.by_presale.map((d) => ({
-                  label: d.key === "si" ? "Sí" : d.key === "no" ? "No" : "Sin dato",
-                  value: d.count,
-                }))}
+          <ChartBlock title={copy.events.charts.byDate} definition="Cantidad de eventos según el mes de la fecha informada.">
+            <EventsBarChart label={copy.events.charts.byDate} data={toChart(byMonth, monthLabel)} />
+          </ChartBlock>
+          {usingFixture && byNightType.length > 0 ? (
+            <ChartBlock title={copy.events.charts.nightType} definition={copy.events.charts.nightTypeNote}>
+              <EventsBarChart label={copy.events.charts.nightType} horizontal data={toChart(byNightType)} />
+            </ChartBlock>
+          ) : null}
+          {isSuperAdmin ? (
+            <ChartBlock title={copy.events.charts.topCollectives} definition="Solo visible para el equipo Discover.">
+              <EventsBarChart
+                label={copy.events.charts.topCollectives}
+                horizontal
+                data={toChart(byCollective)}
               />
             </ChartBlock>
-          )}
-          {summary.distributions.by_commission.length > 0 && (
-            <ChartBlock title={copy.events.charts.commission} definition="">
-              <EventsPieChart
-                label={copy.events.charts.commission}
-                data={summary.distributions.by_commission.map((d) => ({
-                  label: `${d.key}%`,
-                  value: d.count,
-                }))}
-              />
-            </ChartBlock>
-          )}
+          ) : null}
+          <ChartBlock title={copy.events.charts.presale} definition="Eventos con y sin preventa exclusiva Discover.">
+            <EventsBarChart
+              label={copy.events.charts.presale}
+              horizontal
+              data={toChart(summary.distributions.by_presale, (key) =>
+                key === "si" ? "Sí" : key === "no" ? "No" : "Sin dato",
+              )}
+            />
+          </ChartBlock>
+          <ChartBlock title={copy.events.charts.commission} definition="Comisión informada, como string del contrato (por ejemplo 11.5).">
+            <EventsBarChart
+              label={copy.events.charts.commission}
+              horizontal
+              data={toChart(summary.distributions.by_commission, (key) =>
+                key === "tarifa especial" ? key : `${key}%`,
+              )}
+            />
+          </ChartBlock>
+          <ChartBlock title={copy.events.charts.commitments} definition="Frecuencia de cada compromiso de promoción declarado.">
+            <EventsBarChart label={copy.events.charts.commitments} horizontal data={toChart(byCommitment)} />
+          </ChartBlock>
+          <ChartBlock title={copy.events.charts.benefits} definition={copy.events.benefitNote}>
+            <EventsBarChart label={copy.events.charts.benefits} horizontal data={toChart(byBenefit)} />
+          </ChartBlock>
+          <ChartBlock title={copy.events.charts.payment} definition="Medio de pago informado. No se muestra cuenta, banco ni documento.">
+            <EventsBarChart label={copy.events.charts.payment} horizontal data={toChart(byPayment)} />
+          </ChartBlock>
         </div>
-      )}
+      ) : null}
 
-      {/* Tabla */}
       <div className="surface-card">
         <div className="flex items-center justify-between border-b border-[var(--discover-slate)] px-4 py-3">
           <h2 className="text-sm font-semibold">{copy.events.table.title}</h2>
@@ -390,33 +432,15 @@ export default function EventosPage() {
           <table className="w-full text-sm">
             <thead className="bg-[var(--secondary)]">
               <tr>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {copy.events.table.date}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {copy.events.table.collective}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {copy.events.table.event}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {copy.events.table.presale}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {copy.events.table.commission}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {copy.events.table.benefit}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {copy.events.table.commitments}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {copy.events.table.payment}
-                </th>
-                <th className="px-4 py-3 text-left font-medium text-muted-foreground">
-                  {copy.events.table.flyer}
-                </th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{copy.events.table.date}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{copy.events.table.collective}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{copy.events.table.event}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{copy.events.table.presale}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{copy.events.table.commission}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{copy.events.table.benefit}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{copy.events.table.commitments}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{copy.events.table.payment}</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">{copy.events.table.flyer}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--discover-slate)]">
@@ -427,16 +451,17 @@ export default function EventosPage() {
                   </td>
                 </tr>
               ) : (
-                filteredEvents.map((event, idx) => (
-                  <tr key={idx} className="transition-colors hover:bg-[var(--bg-deep)]">
+                filteredEvents.map((event) => (
+                  <tr
+                    key={`${event.event_at}-${event.collective_name}-${event.event_name}`}
+                    className="transition-colors hover:bg-[var(--bg-deep)]"
+                  >
                     <td className="whitespace-nowrap px-4 py-3">{formatDate(event.event_at)}</td>
                     <td className="px-4 py-3">
                       {event.collective_name}
-                      {event.collective_raw !== event.collective_name && (
-                        <div className="text-xs text-muted-foreground">
-                          orig.: {event.collective_raw}
-                        </div>
-                      )}
+                      {event.assignment_status === "unmapped" ? (
+                        <div className="text-xs text-muted-foreground">{copy.events.unassigned}</div>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">{event.event_name}</td>
                     <td className="px-4 py-3">
@@ -450,17 +475,19 @@ export default function EventosPage() {
                         {event.has_presale ? "Sí" : "No"}
                       </span>
                     </td>
-                    <td className="whitespace-nowrap px-4 py-3">{event.commission}%</td>
+                    <td className="whitespace-nowrap px-4 py-3">
+                      {event.commission === "tarifa especial" ? event.commission : `${event.commission}%`}
+                    </td>
                     <td className="px-4 py-3">{event.exclusive_benefit || "—"}</td>
                     <td className="px-4 py-3">
                       {event.promotion_commitments ? (
                         <div className="flex flex-wrap gap-1">
-                          {event.promotion_commitments.split(/[,;]+/).map((c, i) => (
+                          {splitCommitments(event.promotion_commitments).map((commitment) => (
                             <span
-                              key={i}
+                              key={commitment}
                               className="inline-block rounded bg-[var(--secondary)] px-2 py-0.5 text-xs text-muted-foreground"
                             >
-                              {c.trim()}
+                              {commitment}
                             </span>
                           ))}
                         </div>
@@ -475,7 +502,7 @@ export default function EventosPage() {
                           href={event.flyer_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[var(--chart-3)] hover:underline"
+                          className="text-[var(--chart-1)] hover:underline"
                         >
                           Ver flyer
                         </a>
